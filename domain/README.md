@@ -10,9 +10,11 @@ de frameworks ni infraestructura.
 
 - Definir entidades narrativas (Character, Story, Arc, etc.)
 - Definir relaciones entre conceptos
+- Definir vocabularios compartidos (types)
 - Definir contratos que la infraestructura debe cumplir
 
-El domain **no ejecuta lógica de aplicación** ni accede a datos.
+El domain representa **el lenguaje del sistema** y es la base sobre la cual
+se construyen backend, frontend y persistencia.
 
 ---
 
@@ -22,10 +24,12 @@ El domain **no ejecuta lógica de aplicación** ni accede a datos.
   Entidades y estructuras principales del sistema.
 
 - `types/`  
-  Tipos compartidos, enums y utilidades de tipado.
+  Tipos compartidos, uniones, vocabularios y utilidades de tipado  
+  usados por múltiples modelos.
 
 - `contracts/`  
-  Interfaces que deben implementar backend y persistencia
+  Contratos (interfaces) que definen **cómo se accede o persiste el dominio**,  
+  sin conocer implementaciones concretas  
   (repositorios, gateways, etc.).
 
 ---
@@ -39,6 +43,8 @@ El domain **no ejecuta lógica de aplicación** ni accede a datos.
 - Validaciones de input
 - Lógica de UI
 - Lógica de base de datos
+- Estado global
+- Side effects
 
 ---
 
