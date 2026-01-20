@@ -1,11 +1,21 @@
 {
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
+
     "target": "ES2020",
-    "module": "CommonJS",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+
     "rootDir": ".",
     "outDir": "dist",
+
     "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+
+    "baseUrl": ".",
+    "paths": {
+      "@world-forge/domain": ["domain/index.ts"]
+    }
   }
 }
