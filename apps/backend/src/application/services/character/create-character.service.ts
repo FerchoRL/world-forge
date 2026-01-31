@@ -1,4 +1,5 @@
 import { CharacterRepository } from '@world-forge/domain'
+import { CATEGORIES } from '@world-forge/domain'
 
 import { CharacterMapper } from '../../mappers/character.mapper'
 import { CreateCharacterRequest } from '../../dtos/character/create-character.request'
@@ -6,7 +7,7 @@ import { CharacterDTO } from '../../dtos/character/character.dto'
 import { IdGenerator } from '../../ids/id-generator'
 import { ValidationError } from '../../errors/validation.error'
 
-export class CreateCharacterUseCase {
+export class CreateCharacterService {
     constructor(
         private readonly repository: CharacterRepository,
         private readonly idGenerator: IdGenerator
@@ -25,6 +26,13 @@ export class CreateCharacterUseCase {
         }
         if(!input.inspirations || input.inspirations.length === 0){
             throw new ValidationError('At least one Inspiration is required')
+        }
+
+        // Valida que las categorias existan
+        for(const category of input.categories){
+            if(!CATEGORIES[category]){
+                throw new ValidationError(`Category ${category} is not valid`)
+            }
         }
 
         // Genera ID
