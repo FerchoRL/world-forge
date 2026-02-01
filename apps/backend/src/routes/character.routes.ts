@@ -7,11 +7,15 @@ import { GetCharacterByIdService } from '../application/services/character/get-c
 import { ListCharactersService } from '../application/services/character/list-characters.service'
 import { UpdateCharacterService } from '../application/services/character/update-character.service'
 import { ArchiveCharacterService } from '../application/services/character/archive-character.service'
+import { MongoCharacterRepository } from '../infra/repositories/mongo/mongo-character.repository'
 
 const router = Router()
 
 //Dependencias
-const characterRepository = new InMemoryCharacterRepository()
+//Repo de personajes en memoria
+//const characterRepository = new InMemoryCharacterRepository()
+//Repo de personajes con MongoDB
+const characterRepository = new MongoCharacterRepository()
 const idGenerator = new SimpleIdGenerator()
 
 const createCharacterService = new CreateCharacterService(
