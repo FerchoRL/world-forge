@@ -1,10 +1,14 @@
-import './App.css'
+import { AppShell } from './layout/AppShell'
+import '../styles/index.css'
 
 function App() {
   return (
-    <div>
-      <h1>Hello fucking world</h1>
-    </div>
+    <AppShell>
+      <div className="p-6">
+        <h1 className="text-xl">Layout test</h1>
+        <p>Si ves el sidebar y topbar, ya funcionó.</p>
+      </div>
+    </AppShell>
   )
 }
 
