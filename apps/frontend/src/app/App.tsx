@@ -1,13 +1,9 @@
-import { AppShell } from './layout/AppShell'
+import { router } from './router'
 import '../styles/index.css'
-import { CharactersListPage } from '../pages/CharactersListPage'
+import { RouterProvider } from 'react-router-dom'
 
 function App() {
-  return (
-    <AppShell>
-      <CharactersListPage></CharactersListPage>
-    </AppShell>
-  )
+  return <RouterProvider router={router} />
 }
 
 export default App
