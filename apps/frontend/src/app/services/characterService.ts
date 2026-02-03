@@ -1,35 +1,15 @@
 import { httpClient } from '@/app/api/httpClient'
 
+import type{
+    CharacterApiDTO,
+    ListCharactersApiResponse,
+    CharacterListItem,
+} from '@/features/character/types'
+
 /**
  * ===== Shapes que vienen DEL BACKEND =====
  * (solo forma de datos, no lógica)
  */
-
-interface CharacterApiDTO {
-  id: string
-  name: string
-  status: string
-  categories: string[]
-  identity: string
-  inspirations: string[]
-  notes?: string
-}
-
-interface ListCharactersApiResponse {
-  characters: CharacterApiDTO[]
-}
-
-/**
- * ===== ViewModel para la UI de LISTA =====
- * (solo lo que la pantalla necesita)
- */
-
-export interface CharacterListItem {
-  id: string
-  name: string
-  status: string
-  categories: string[]
-}
 
 /**
  * ===== Service =====
@@ -39,15 +19,20 @@ export interface CharacterListItem {
  */
 
 export const characterService = {
-  async getAll(): Promise<CharacterListItem[]> {
-    const response =
-      await httpClient.get<ListCharactersApiResponse>('/characters')
 
-    return response.characters.map((character) => ({
-      id: character.id,
-      name: character.name,
-      status: character.status,
-      categories: character.categories,
-    }))
-  },
+    //
+    async getAll(): Promise<CharacterListItem[]> {
+        const response =
+            await httpClient.get<ListCharactersApiResponse>('/characters')
+
+        return response.characters.map((character: CharacterApiDTO) => ({
+            id: character.id,
+            name: character.name,
+            status: character.status,
+            categories: character.categories,
+            identity: character.identity,
+            inspirations: character.inspirations,
+            notes: character.notes,
+        }))
+    },
 }

@@ -13,7 +13,8 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 
-import { characterService, type CharacterListItem } from '@/app/services/characterService'
+import { characterService } from '@/app/services/characterService'
+import type { CharacterListItem } from '@/features/character/types'
 
 const statusColors: Record<string, string> = {
   ACTIVE: 'bg-green-100 text-green-800',
@@ -58,6 +59,7 @@ export function CharactersListPage() {
           </p>
         </div>
 
+        {/* TODO Create new character */}
         <Button className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
           New Character
@@ -82,14 +84,17 @@ export function CharactersListPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-zinc-200 rounded-lg">
-        <Table>
+      <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
+        <Table className="table-fixed w-full">
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Categories</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="w-55">Identity</TableHead>
+              <TableHead className="w-55">Inspirations</TableHead>
+              <TableHead className="w-60">Notes</TableHead>
+              <TableHead className="text-right w-25">Actions</TableHead>
             </TableRow>
           </TableHeader>
 
@@ -107,8 +112,37 @@ export function CharactersListPage() {
                   </Badge>
                 </TableCell>
 
-                <TableCell className="text-zinc-600">
+                <TableCell className="block max-w-55 overflow-hidden whitespace-nowrap text-ellipsis"
+                  title={character.categories.join(', ')}
+                >
                   {character.categories.join(', ')}
+                </TableCell>
+
+                <TableCell>
+                  <div
+                    className="block max-w-55 overflow-hidden whitespace-nowrap text-ellipsis"
+                    title={character.identity}
+                  >
+                    {character.identity}
+                  </div>
+                </TableCell>
+
+                <TableCell>
+                  <div
+                    className="block max-w-55 overflow-hidden whitespace-nowrap text-ellipsis"
+                    title={character.inspirations.join(', ')}
+                  >
+                    {character.inspirations.join(', ')}
+                  </div>
+                </TableCell>
+
+                <TableCell>
+                  <div
+                    className="max-w-[320px] truncate text-zinc-500 italic"
+                    title={character.notes ?? ''}
+                  >
+                    {character.notes ?? '—'}
+                  </div>
                 </TableCell>
 
                 <TableCell>
