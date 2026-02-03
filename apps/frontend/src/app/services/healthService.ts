@@ -1,12 +1,19 @@
 import { httpClient } from '@/app/api/httpClient'
 
-interface HealthResponse {
+interface HealthApiResponse {
   status: string
   service: string
 }
 
 export const healthService = {
-  get(): Promise<HealthResponse> {
-    return httpClient.get<HealthResponse>('/health')
+  async get() {
+    const response = await httpClient.get<HealthApiResponse>('/health')
+
+    const isOk = response.status?.toLowerCase() === 'ok'
+
+    return {
+      ok: isOk,
+      service: response.service,
+    }
   },
 }
