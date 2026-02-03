@@ -1,5 +1,8 @@
 import { Plus, Eye, Pencil, Search } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
+
+import { useCharacterStore } from '@/features/character/store/characterStore'
+import type { CharacterListItem } from '@/features/character/types'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,9 +16,6 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 
-import { characterService } from '@/app/services/characterService'
-import type { CharacterListItem } from '@/features/character/types'
-
 const statusColors: Record<string, string> = {
   ACTIVE: 'bg-green-100 text-green-800',
   DRAFT: 'bg-yellow-100 text-yellow-800',
@@ -23,22 +23,16 @@ const statusColors: Record<string, string> = {
 }
 
 export function CharactersListPage() {
-  const [characters, setCharacters] = useState<CharacterListItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  // 🔵 Zustand state
+  const characters = useCharacterStore((s) => s.characters)
+  const loading = useCharacterStore((s) => s.charactersLoading)
+  const error = useCharacterStore((s) => s.charactersError)
+  const fetchCharacters = useCharacterStore((s) => s.fetchCharacters)
 
+  // 🔵 Load data once
   useEffect(() => {
-    characterService
-      .getAll()
-      .then(setCharacters)
-      .catch((err) => {
-        console.error(err)
-        setError('Failed to load characters')
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-  }, [])
+    fetchCharacters()
+  }, [fetchCharacters])
 
   if (loading) {
     return <div className="p-8">Loading characters…</div>
@@ -59,14 +53,14 @@ export function CharactersListPage() {
           </p>
         </div>
 
-        {/* TODO Create new character */}
+        {/* TODO: Create new character */}
         <Button className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
           New Character
         </Button>
       </div>
 
-      {/* Filters (solo UI por ahora) */}
+      {/* Filters (UI only for now) */}
       <div className="bg-white border border-zinc-200 rounded-lg p-4">
         <div className="flex gap-4">
           <div className="flex-1 relative">
@@ -99,7 +93,7 @@ export function CharactersListPage() {
           </TableHeader>
 
           <TableBody>
-            {characters.map((character) => (
+            {characters.map((character: CharacterListItem) => (
               <TableRow key={character.id}>
                 <TableCell>{character.name}</TableCell>
 
@@ -112,12 +106,17 @@ export function CharactersListPage() {
                   </Badge>
                 </TableCell>
 
-                <TableCell className="block max-w-55 overflow-hidden whitespace-nowrap text-ellipsis"
-                  title={character.categories.join(', ')}
-                >
-                  {character.categories.join(', ')}
+                {/* Categories */}
+                <TableCell>
+                  <div
+                    className="block max-w-55 overflow-hidden whitespace-nowrap text-ellipsis"
+                    title={character.categories.join(', ')}
+                  >
+                    {character.categories.join(', ')}
+                  </div>
                 </TableCell>
 
+                {/* Identity */}
                 <TableCell>
                   <div
                     className="block max-w-55 overflow-hidden whitespace-nowrap text-ellipsis"
@@ -127,6 +126,7 @@ export function CharactersListPage() {
                   </div>
                 </TableCell>
 
+                {/* Inspirations */}
                 <TableCell>
                   <div
                     className="block max-w-55 overflow-hidden whitespace-nowrap text-ellipsis"
@@ -136,15 +136,17 @@ export function CharactersListPage() {
                   </div>
                 </TableCell>
 
+                {/* Notes */}
                 <TableCell>
                   <div
-                    className="max-w-[320px] truncate text-zinc-500 italic"
+                    className="block max-w-60 overflow-hidden whitespace-nowrap text-ellipsis text-zinc-500 italic"
                     title={character.notes ?? ''}
                   >
                     {character.notes ?? '—'}
                   </div>
                 </TableCell>
 
+                {/* Actions */}
                 <TableCell>
                   <div className="flex items-center justify-end gap-2">
                     <Button variant="ghost" size="sm">
