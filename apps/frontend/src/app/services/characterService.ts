@@ -1,26 +1,21 @@
 import { httpClient } from '@/app/api/httpClient'
 
-import type{
+import type {
     CharacterApiDTO,
     ListCharactersApiResponse,
     CharacterListItem,
+    GetCharacterByIdApiResponse,
 } from '@/features/character/types'
-
-/**
- * ===== Shapes que vienen DEL BACKEND =====
- * (solo forma de datos, no lógica)
- */
 
 /**
  * ===== Service =====
  * Traduce backend → frontend
  * NO conoce UI
- * NO conoce fetch
+ * NO conoce estado
  */
-
 export const characterService = {
 
-    //
+    // Obtener todos los personajes
     async getAll(): Promise<CharacterListItem[]> {
         const response =
             await httpClient.get<ListCharactersApiResponse>('/characters')
@@ -34,5 +29,21 @@ export const characterService = {
             inspirations: character.inspirations,
             notes: character.notes,
         }))
+    },
+
+    // Obtener un personaje por su ID
+    async getById(id: string): Promise<CharacterListItem> {
+        const response =
+            await httpClient.get<GetCharacterByIdApiResponse>(`/characters/${id}`)
+
+        return {
+            id: response.character.id,
+            name: response.character.name,
+            status: response.character.status,
+            categories: response.character.categories,
+            identity: response.character.identity,
+            inspirations: response.character.inspirations,
+            notes: response.character.notes,
+        }
     },
 }

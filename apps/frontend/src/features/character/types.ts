@@ -27,8 +27,15 @@ export interface CharacterApiDTO {
   notes?: string
 }
 
+// Respuesta al listar personajes
 export interface ListCharactersApiResponse {
   characters: CharacterApiDTO[]
+}
+
+// Respuesta al obtener un personaje por su ID
+
+export interface GetCharacterByIdApiResponse {
+  character: CharacterApiDTO
 }
 
 /**
