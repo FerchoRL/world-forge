@@ -15,12 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-
-const statusColors: Record<string, string> = {
-  ACTIVE: 'bg-green-100 text-green-800',
-  DRAFT: 'bg-yellow-100 text-yellow-800',
-  ARCHIVED: 'bg-zinc-100 text-zinc-600',
-}
+import { getCharacterStatusClass } from '@/features/character/ui/statusBadge'
 
 export function CharactersListPage() {
   // 🔵 Zustand state
@@ -100,7 +95,7 @@ export function CharactersListPage() {
                 <TableCell>
                   <Badge
                     variant="secondary"
-                    className={statusColors[character.status]}
+                    className={getCharacterStatusClass(character.status)}
                   >
                     {character.status}
                   </Badge>
