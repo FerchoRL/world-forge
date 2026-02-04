@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import { Plus, Eye, Pencil, Search } from 'lucide-react'
 import { useEffect } from 'react'
 
@@ -18,13 +19,13 @@ import { Badge } from '@/components/ui/badge'
 import { getCharacterStatusClass } from '@/features/character/ui/statusBadge'
 
 export function CharactersListPage() {
-  // 🔵 Zustand state
+  const navigate = useNavigate()
+
   const characters = useCharacterStore((s) => s.characters)
   const loading = useCharacterStore((s) => s.charactersLoading)
   const error = useCharacterStore((s) => s.charactersError)
   const fetchCharacters = useCharacterStore((s) => s.fetchCharacters)
 
-  // 🔵 Load data once
   useEffect(() => {
     fetchCharacters()
   }, [fetchCharacters])
@@ -48,14 +49,13 @@ export function CharactersListPage() {
           </p>
         </div>
 
-        {/* TODO: Create new character */}
         <Button className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
           New Character
         </Button>
       </div>
 
-      {/* Filters (UI only for now) */}
+      {/* Filters (UI only) */}
       <div className="bg-white border border-zinc-200 rounded-lg p-4">
         <div className="flex gap-4">
           <div className="flex-1 relative">
@@ -73,26 +73,30 @@ export function CharactersListPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
-        <Table className="table-fixed w-full">
+      {/* TODO Hacerlo responsivo */}
+      <div className="bg-white border border-zinc-200 rounded-lg overflow-x-auto">
+        <Table className="table-fixed min-w-290">
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Categories</TableHead>
-              <TableHead className="w-55">Identity</TableHead>
-              <TableHead className="w-55">Inspirations</TableHead>
-              <TableHead className="w-60">Notes</TableHead>
-              <TableHead className="text-right w-25">Actions</TableHead>
+              <TableHead className="w-40">Name</TableHead>
+              <TableHead className="w-30">Status</TableHead>
+              <TableHead className="w-50">Categories</TableHead>
+              <TableHead className="w-65">Identity</TableHead>
+              <TableHead className="w-65">Inspirations</TableHead>
+              <TableHead className="w-40 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
 
           <TableBody>
             {characters.map((character: CharacterListItem) => (
               <TableRow key={character.id}>
-                <TableCell>{character.name}</TableCell>
+                {/* Name */}
+                <TableCell className="w-40 truncate">
+                  {character.name}
+                </TableCell>
 
-                <TableCell>
+                {/* Status */}
+                <TableCell className="w-30">
                   <Badge
                     variant="secondary"
                     className={getCharacterStatusClass(character.status)}
@@ -102,9 +106,9 @@ export function CharactersListPage() {
                 </TableCell>
 
                 {/* Categories */}
-                <TableCell>
+                <TableCell className="w-50">
                   <div
-                    className="block max-w-55 overflow-hidden whitespace-nowrap text-ellipsis"
+                    className="truncate"
                     title={character.categories.join(', ')}
                   >
                     {character.categories.join(', ')}
@@ -112,43 +116,47 @@ export function CharactersListPage() {
                 </TableCell>
 
                 {/* Identity */}
-                <TableCell>
-                  <div
-                    className="block max-w-55 overflow-hidden whitespace-nowrap text-ellipsis"
-                    title={character.identity}
-                  >
+                <TableCell className="w-65">
+                  <div className="truncate" title={character.identity}>
                     {character.identity}
                   </div>
                 </TableCell>
 
                 {/* Inspirations */}
-                <TableCell>
+                <TableCell className="w-65">
                   <div
-                    className="block max-w-55 overflow-hidden whitespace-nowrap text-ellipsis"
+                    className="truncate"
                     title={character.inspirations.join(', ')}
                   >
                     {character.inspirations.join(', ')}
                   </div>
                 </TableCell>
 
-                {/* Notes */}
-                <TableCell>
-                  <div
-                    className="block max-w-60 overflow-hidden whitespace-nowrap text-ellipsis text-zinc-500 italic"
-                    title={character.notes ?? ''}
-                  >
-                    {character.notes ?? '—'}
-                  </div>
-                </TableCell>
-
                 {/* Actions */}
-                <TableCell>
-                  <div className="flex items-center justify-end gap-2">
-                    <Button variant="ghost" size="sm">
+                <TableCell className="w-40">
+                  <div className="flex items-center justify-end gap-2 whitespace-nowrap">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex items-center gap-1"
+                      onClick={() =>
+                        navigate(`/characters/${character.id}`)
+                      }
+                    >
                       <Eye className="w-4 h-4" />
+                      View
                     </Button>
-                    <Button variant="ghost" size="sm">
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex items-center gap-1"
+                      onClick={() =>
+                        navigate(`/characters/${character.id}/edit`)
+                      }
+                    >
                       <Pencil className="w-4 h-4" />
+                      Edit
                     </Button>
                   </div>
                 </TableCell>
