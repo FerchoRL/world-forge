@@ -3,7 +3,7 @@ import { Plus, Eye, Pencil, Search } from 'lucide-react'
 import { useEffect } from 'react'
 
 import { useCharacterStore } from '@/features/character/store/characterStore'
-import type { CharacterListItem } from '@/features/character/types'
+import type { CharacterListItem, StatusFilter } from '@/features/character/types'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,15 +21,32 @@ import { getCharacterStatusClass } from '@/features/character/ui/statusBadge'
 export function CharactersListPage() {
   const navigate = useNavigate()
 
-  const characters = useCharacterStore((s) => s.characters)
+  // Store state
+  const filteredCharacters = useCharacterStore((s) => s.filteredCharacters)
   const loading = useCharacterStore((s) => s.charactersLoading)
   const error = useCharacterStore((s) => s.charactersError)
+
   const fetchCharacters = useCharacterStore((s) => s.fetchCharacters)
 
+  const searchTerm = useCharacterStore((s) => s.searchTerm)
+  const statusFilter = useCharacterStore((s) => s.statusFilter)
+
+  const setSearchTerm = useCharacterStore((s) => s.setSearchTerm)
+  const setStatusFilter = useCharacterStore((s) => s.setStatusFilter)
+
+  // Ejecutamos el selector DERIVADO fuera del hook
+  const characters = filteredCharacters()
+
+  // ======================
+  // Effects
+  // ======================
   useEffect(() => {
     fetchCharacters()
   }, [fetchCharacters])
 
+  // ======================
+  // States
+  // ======================
   if (loading) {
     return <div className="p-8">Loading characters…</div>
   }
@@ -40,7 +57,9 @@ export function CharactersListPage() {
 
   return (
     <div className="p-8 space-y-6">
-      {/* Header */}
+      {/* ======================
+          Header
+         ====================== */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl mb-2">Characters</h1>
@@ -55,25 +74,41 @@ export function CharactersListPage() {
         </Button>
       </div>
 
-      {/* Filters (UI only) */}
+      {/* ======================
+          Filters
+         ====================== */}
       <div className="bg-white border border-zinc-200 rounded-lg p-4">
         <div className="flex gap-4">
+          {/* Search */}
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-            <Input placeholder="Search characters..." className="pl-10" />
+            <Input
+              placeholder="Search characters..."
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
 
-          <select className="px-4 py-2 border border-zinc-300 rounded-md bg-white text-sm">
-            <option>All Statuses</option>
-            <option>ACTIVE</option>
-            <option>DRAFT</option>
-            <option>ARCHIVED</option>
+          {/* Status filter */}
+          <select
+            className="px-4 py-2 border border-zinc-300 rounded-md bg-white text-sm"
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(e.target.value as StatusFilter)
+            }
+          >
+            <option value="ALL">All Statuses</option>
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="DRAFT">DRAFT</option>
+            <option value="ARCHIVED">ARCHIVED</option>
           </select>
         </div>
       </div>
 
-      {/* Table */}
-      {/* TODO Hacerlo responsivo */}
+      {/* ======================
+          Table
+         ====================== */}
       <div className="bg-white border border-zinc-200 rounded-lg overflow-x-auto">
         <Table className="table-fixed min-w-290">
           <TableHeader>
@@ -162,6 +197,18 @@ export function CharactersListPage() {
                 </TableCell>
               </TableRow>
             ))}
+
+            {/* Empty state */}
+            {characters.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={6}
+                  className="text-center text-zinc-500 py-8"
+                >
+                  No characters found
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>

@@ -1,3 +1,4 @@
+import { Status } from '@world-forge/domain'
 /**
  * ===============================
  * Character — Frontend DTOs
@@ -20,7 +21,7 @@
 export interface CharacterApiDTO {
   id: string
   name: string
-  status: string
+  status: Status
   categories: string[]
   identity: string
   inspirations: string[]
@@ -45,10 +46,12 @@ export interface GetCharacterByIdApiResponse {
  * Tipos pensados para la UI
  */
 
+export type StatusFilter =  Status | 'ALL';
+
 export interface CharacterListItem {
   id: string
   name: string
-  status: string
+  status: Status
   categories: string[]
   identity: string
   inspirations: string[]
