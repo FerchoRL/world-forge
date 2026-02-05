@@ -35,30 +35,46 @@ export class MongoCharacterRepository implements CharacterRepository {
         }
     }
 
-    async list(): Promise<RepoResult<Character[]>> {
-        try{
-            const docs = await CharacterModel.find().lean()
-            return{
+    async list(
+        page: number,
+        limit: number
+    ): Promise<RepoResult<{ items: Character[]; total: number }>> {
+        try {
+            const skip = (page - 1) * limit
+
+            const [docs, total] = await Promise.all([
+                CharacterModel.find()
+                    .skip(skip)
+                    .limit(limit)
+                    .lean(),
+                CharacterModel.countDocuments(),
+            ])
+
+            return {
                 ok: true,
-                data: docs.map(CharacterMongoMapper.toDomain)
+                data: {
+                    items: docs.map(CharacterMongoMapper.toDomain),
+                    total,
+                },
             }
-        } catch{
+        } catch (error) {
             return {
                 ok: false,
                 error: {
                     code: 'UNKNOWN',
-                    message: 'Error listing characters from database'
-                }
+                    message: 'Error listing paginated characters from database',
+                },
             }
         }
     }
 
+
     async create(input: Character): Promise<RepoResult<Character>> {
-        try{
+        try {
             const doc = CharacterMongoMapper.toPersistence(input)
             await CharacterModel.create(doc)
             return { ok: true, data: input }
-        } catch(error){
+        } catch (error) {
             return {
                 ok: false,
                 error: {
@@ -73,7 +89,7 @@ export class MongoCharacterRepository implements CharacterRepository {
         id: CharacterId,
         patch: Partial<Character>
     ): Promise<RepoResult<Character>> {
-        try{
+        try {
             const updateDoc = {
                 ...patch,
             }
@@ -85,7 +101,7 @@ export class MongoCharacterRepository implements CharacterRepository {
 
             const updatedDoc = await CharacterModel.findById(id).lean()
 
-            if(!updatedDoc){
+            if (!updatedDoc) {
                 return {
                     ok: false,
                     error: {
@@ -99,7 +115,7 @@ export class MongoCharacterRepository implements CharacterRepository {
                 ok: true,
                 data: CharacterMongoMapper.toDomain(updatedDoc)
             }
-        }catch(error){
+        } catch (error) {
             return {
                 ok: false,
                 error: {
@@ -111,14 +127,14 @@ export class MongoCharacterRepository implements CharacterRepository {
     }
 
     async archive(id: CharacterId): Promise<RepoResult<void>> {
-        try{
+        try {
             await CharacterModel.updateOne(
                 { _id: id },
                 { $set: { status: 'ARCHIVED' } }
             )
 
             return { ok: true, data: undefined }
-        } catch(error){
+        } catch (error) {
             return {
                 ok: false,
                 error: {

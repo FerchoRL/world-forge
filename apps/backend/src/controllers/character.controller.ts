@@ -15,7 +15,7 @@ export class CharacterController {
         private readonly listCharactersService: ListCharactersService,
         private readonly updateCharacterService: UpdateCharacterService,
         private readonly archiveCharacterService: ArchiveCharacterService
-    ) {}
+    ) { }
 
     //POST /characters
     async create(req: Request, res: Response): Promise<void> {
@@ -46,9 +46,20 @@ export class CharacterController {
     }
 
     //GET /characters
-    async list(_req: Request, res: Response): Promise<void> {
+    async list(req: Request, res: Response): Promise<void> {
         try {
-            const result = await this.listCharactersService.execute()
+            // Obtener los parámetros de consulta para paginación
+            const page =
+                req.query.page !== undefined ? Number(req.query.page) : undefined
+
+            const limit =
+                req.query.limit !== undefined ? Number(req.query.limit) : undefined
+
+            const result = await this.listCharactersService.execute({
+                page,
+                limit,
+            })
+
             res.status(200).json(result)
         } catch (error) {
             console.error(error)
@@ -94,4 +105,3 @@ export class CharacterController {
         }
     }
 }
-    
