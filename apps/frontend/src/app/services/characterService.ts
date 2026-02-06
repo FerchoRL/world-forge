@@ -5,6 +5,7 @@ import type {
     ListCharactersApiResponse,
     CharacterListItem,
     GetCharacterByIdApiResponse,
+    PaginatedCharactersResponse,
 } from '@/features/character/types'
 
 /**
@@ -16,19 +17,32 @@ import type {
 export const characterService = {
 
     // Obtener todos los personajes
-    async getAll(): Promise<CharacterListItem[]> {
+    async getAll(params: { page?: number, limit?: number }): Promise<PaginatedCharactersResponse> {
+        const query = new URLSearchParams({
+            page: String(params.page),
+            limit: String(params.limit),
+        })
         const response =
-            await httpClient.get<ListCharactersApiResponse>('/characters')
+            await httpClient.get<ListCharactersApiResponse & {
+                page: number
+                limit: number
+                total: number
+            }>(`/characters?${query.toString()}`)
 
-        return response.characters.map((character: CharacterApiDTO) => ({
-            id: character.id,
-            name: character.name,
-            status: character.status,
-            categories: character.categories,
-            identity: character.identity,
-            inspirations: character.inspirations,
-            notes: character.notes,
-        }))
+        return {
+            characters: response.characters.map((character: CharacterApiDTO) => ({
+                id: character.id,
+                name: character.name,
+                status: character.status,
+                categories: character.categories,
+                identity: character.identity,
+                inspirations: character.inspirations,
+                notes: character.notes,
+            })),
+            page: response.page,
+            limit: response.limit,
+            total: response.total,
+        }
     },
 
     // Obtener un personaje por su ID

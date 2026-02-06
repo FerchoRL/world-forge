@@ -57,3 +57,11 @@ export interface CharacterListItem {
   inspirations: string[]
   notes?: string
 }
+
+// Respuesta paginada al listar personajes
+export interface PaginatedCharactersResponse {
+  characters: CharacterListItem[]
+  page: number
+  limit: number
+  total: number
+}

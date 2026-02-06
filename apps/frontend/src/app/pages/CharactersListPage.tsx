@@ -23,10 +23,14 @@ export function CharactersListPage() {
 
   // Store state
   const filteredCharacters = useCharacterStore((s) => s.filteredCharacters)
-  const loading = useCharacterStore((s) => s.charactersLoading)
+  const charactersLoading = useCharacterStore((s) => s.charactersLoading)
   const error = useCharacterStore((s) => s.charactersError)
 
-  const fetchCharacters = useCharacterStore((s) => s.fetchCharacters)
+  const {
+    hasMore,
+    fetchInitialCharacters,
+    loadMoreCharacters,
+  } = useCharacterStore()
 
   const searchTerm = useCharacterStore((s) => s.searchTerm)
   const statusFilter = useCharacterStore((s) => s.statusFilter)
@@ -41,13 +45,13 @@ export function CharactersListPage() {
   // Effects
   // ======================
   useEffect(() => {
-    fetchCharacters()
-  }, [fetchCharacters])
+    fetchInitialCharacters()
+  }, [fetchInitialCharacters])
 
   // ======================
   // States
   // ======================
-  if (loading) {
+  if (charactersLoading) {
     return <div className="p-8">Loading characters…</div>
   }
 
@@ -212,6 +216,17 @@ export function CharactersListPage() {
           </TableBody>
         </Table>
       </div>
+      {hasMore && (
+        <div className="flex justify-center mt-6">
+          <Button
+            onClick={loadMoreCharacters}
+            disabled={charactersLoading}
+          >
+            {charactersLoading ? 'Loading...' : 'Load more'}
+          </Button>
+        </div>
+      )}
+
     </div>
   )
 }

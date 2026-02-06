@@ -11,6 +11,12 @@ interface CharacterState {
   charactersLoading: boolean
   charactersError: string | null
 
+  // Pagination (NEW)
+  page: number
+  limit: number
+  total: number
+  hasMore: boolean
+
   // ======================
   // Detail
   // ======================
@@ -27,7 +33,8 @@ interface CharacterState {
   // ======================
   // Actions
   // ======================
-  fetchCharacters: () => Promise<void>
+  fetchInitialCharacters: () => Promise<void>
+  loadMoreCharacters: () => Promise<void>
   fetchCharacterById: (id: string) => Promise<void>
   clearErrors: () => void
 
@@ -50,6 +57,14 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
   charactersError: null,
 
   // ======================
+  // Pagination
+  // ======================
+  page: 1,
+  limit: 10,
+  total: 0,
+  hasMore: true,
+
+  // ======================
   // Detail
   // ======================
   selectedCharacter: null,
@@ -65,15 +80,50 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
   // ======================
   // Actions
   // ======================
-  fetchCharacters: async () => {
+  fetchInitialCharacters: async () => {
     set({ charactersLoading: true, charactersError: null })
 
     try {
-      const characters = await characterService.getAll()
-      set({ characters })
+      const { limit } = get()
+      const response = await characterService.getAll({ page: 1, limit })
+      set({
+        characters: response.characters,
+        total: response.total,
+        page: 1,
+        hasMore: response.characters.length < response.total,
+      })
     } catch (error) {
       console.error(error)
       set({ charactersError: 'Failed to load characters' })
+    } finally {
+      set({ charactersLoading: false })
+    }
+  },
+
+  loadMoreCharacters: async () => {
+    const { page, limit, characters, total, charactersLoading } = get()
+
+    if (charactersLoading) return
+    if (characters.length >= total) return
+
+    set({ charactersLoading: true })
+
+    try {
+      const nextPage = page + 1
+
+      const response = await characterService.getAll({
+        page: nextPage,
+        limit,
+      })
+
+      set({
+        characters: [...characters, ...response.characters],
+        page: nextPage,
+        hasMore: characters.length + response.characters.length < total,
+      })
+    } catch (error) {
+      console.error(error)
+      set({ charactersError: 'Failed to load more characters' })
     } finally {
       set({ charactersLoading: false })
     }
