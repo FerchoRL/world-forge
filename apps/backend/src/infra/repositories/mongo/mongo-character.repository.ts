@@ -5,6 +5,7 @@ import { CharacterId } from '@world-forge/domain'
 
 import { CharacterModel } from '../../schemas/character.schema'
 import { CharacterMongoMapper } from '../../mappers/character.mongo-mapper'
+import e from 'express'
 
 /**
  * Implementacion Mongo del repositorio de Character
@@ -71,15 +72,42 @@ export class MongoCharacterRepository implements CharacterRepository {
 
     async create(input: Character): Promise<RepoResult<Character>> {
         try {
+            // Mapea a formato de persistencia
             const doc = CharacterMongoMapper.toPersistence(input)
             await CharacterModel.create(doc)
             return { ok: true, data: input }
-        } catch (error) {
+        } catch (error: unknown) {
+            //Clasificacion de errores de DB para RepoResult (Sin HTTP aqui)
+            const err = error as any
+            //Mongo duplicate key error
+            if (err.code === 11000) {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'CONFLICT',
+                        message: 'Character with this ID already exists',
+                        meta: { mongoCode: err.code, keyValue: err.keyValue }
+                    }
+                }
+            }
+
+            // Mongoose validation error (enum/required/minlength/etc)
+            if (err.name === 'ValidationError') {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'VALIDATION',
+                        message: err.message ?? 'Validation error',
+                        meta: { name: err.name, errors: err.errors }
+                    }
+                }
+            }
             return {
                 ok: false,
                 error: {
                     code: 'UNKNOWN',
-                    message: 'Error creating character in database'
+                    message: err?.message ?? 'Error creating character in database',
+                    meta: { name: err?.name, stack: err?.stack },
                 }
             }
         }

@@ -7,6 +7,8 @@ import { GetCharacterByIdService } from '../application/services/character/get-c
 import { ListCharactersService } from '../application/services/character/list-characters.service'
 import { UpdateCharacterService } from '../application/services/character/update-character.service'
 import { ArchiveCharacterService } from '../application/services/character/archive-character.service'
+import { NotFoundError } from '../application/errors/not-found.error'
+import { ConflictError } from '../application/errors/conflict.error'
 
 export class CharacterController {
     constructor(
@@ -22,12 +24,30 @@ export class CharacterController {
         try {
             const result = await this.createCharacterService.execute(req.body)
             res.status(201).json(result)
-        } catch (error) {
+        } catch (error: unknown) {
             if (error instanceof ValidationError) {
                 res.status(400).json({ error: error.message })
-            } else {
-                res.status(500).json({ error: 'Internal Server Error' })
+                return
             }
+
+            if (error instanceof NotFoundError) {
+                res.status(404).json({ error: error.message })
+                return
+            }
+
+            if (error instanceof ConflictError) {
+                res.status(409).json({ error: error.message })
+                return
+            }
+
+            if (error instanceof Error) {
+                console.error('Unexpected error:', error)
+                res.status(500).json({ error: error.message })
+                return
+            }
+
+            console.error('Unknown thrown value:', error)
+            res.status(500).json({ error: 'Unexpected error occurred' })
         }
     }
 
