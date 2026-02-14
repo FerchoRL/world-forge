@@ -58,12 +58,26 @@ export class MongoCharacterRepository implements CharacterRepository {
                     total,
                 },
             }
-        } catch (error) {
+        } catch (error: unknown) {
+            const err = error as any
+
+            if (err?.name === 'ValidationError') {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'VALIDATION',
+                        message: err.message ?? 'Validation error while listing characters',
+                        meta: { name: err.name, errors: err.errors },
+                    },
+                }
+            }
+
             return {
                 ok: false,
                 error: {
                     code: 'UNKNOWN',
-                    message: 'Error listing paginated characters from database',
+                    message: err?.message ?? 'Error listing paginated characters from database',
+                    meta: { name: err?.name, stack: err?.stack },
                 },
             }
         }

@@ -81,9 +81,30 @@ export class CharacterController {
             })
 
             res.status(200).json(result)
-        } catch (error) {
-            console.error(error)
-            res.status(500).json({ message: 'Internal server error' })
+        } catch (error: unknown) {
+            if (error instanceof ValidationError) {
+                res.status(400).json({ error: error.message })
+                return
+            }
+
+            if (error instanceof NotFoundError) {
+                res.status(404).json({ error: error.message })
+                return
+            }
+
+            if (error instanceof ConflictError) {
+                res.status(409).json({ error: error.message })
+                return
+            }
+
+            if (error instanceof Error) {
+                console.error('Unexpected error:', error)
+                res.status(500).json({ error: error.message })
+                return
+            }
+
+            console.error('Unknown thrown value:', error)
+            res.status(500).json({ error: 'Unexpected error occurred' })
         }
     }
 
