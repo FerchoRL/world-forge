@@ -25,25 +25,59 @@ export class CreateCharacterService {
 
     async execute(input: CreateCharacterRequest): Promise<CharacterDTO> {
         // Validaicones minimas
-        if (!input.name || input.name.trim() === '') {
+        if (typeof input.name !== 'string' || input.name.trim() === '') {
             throw new ValidationError('Character Name is required')
         }
-        if (!input.identity?.trim()) {
+        if (typeof input.identity !== 'string' || input.identity.trim() === '') {
             throw new ValidationError('Character Identity is required')
         }
-        if (!input.categories || input.categories.length === 0) {
-            throw new ValidationError('At least one Category is required')
-        }
-        if (!input.inspirations || input.inspirations.length === 0) {
-            throw new ValidationError('At least one Inspiration is required')
+        // Validación de categories
+        if (!Array.isArray(input.categories)) {
+            throw new ValidationError('Categories must be an array')
         }
 
-        // Valida que las categorias existan
+        if (input.categories.length === 0) {
+            throw new ValidationError('At least one Category is required')
+        }
+
+        // Validar duplicados
+        const uniqueCategories = new Set(input.categories)
+
+        if (uniqueCategories.size !== input.categories.length) {
+            throw new ValidationError('Categories must not contain duplicates')
+        }
+
         for (const category of input.categories) {
-            if (!CATEGORIES[category]) {
+            if (typeof category !== 'string' || !CATEGORIES[category]) {
                 throw new ValidationError(`Category ${category} is not valid`)
             }
         }
+        // Validación de inspirations
+        if (!Array.isArray(input.inspirations)) {
+            throw new ValidationError('Inspirations must be an array')
+        }
+
+        if (input.inspirations.length === 0) {
+            throw new ValidationError('At least one Inspiration is required')
+        }
+
+        for (const inspiration of input.inspirations) {
+            if (typeof inspiration !== 'string' || inspiration.trim() === '') {
+                throw new ValidationError('Each Inspiration must be a non-empty string')
+            }
+        }
+
+        // Validación de notes (opcional)
+        if (input.notes !== undefined) {
+            if (typeof input.notes !== 'string') {
+                throw new ValidationError('Notes must be a string')
+            }
+
+            if (input.notes.trim() === '') {
+                throw new ValidationError('Notes cannot be empty')
+            }
+        }
+
 
         //Validacion de status
         const status = input.status ?? 'DRAFT'
