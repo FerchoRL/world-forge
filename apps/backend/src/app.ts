@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { healthRouter } from './routes/health.route';
 import characterRoutes from './routes/character.routes';
+import { errorHandler } from './middlewares/error-handler.middleware';
 
 export function createApp() {
     const app = express();
@@ -15,6 +16,9 @@ export function createApp() {
 
     //Character routes
     app.use('/characters', characterRoutes)
+
+    // Global error handling
+    app.use(errorHandler)
 
     return app
 }
