@@ -5,7 +5,6 @@ import { CharacterId } from '@world-forge/domain'
 
 import { CharacterModel } from '../../schemas/character.schema'
 import { CharacterMongoMapper } from '../../mappers/character.mongo-mapper'
-import e from 'express'
 
 /**
  * Implementacion Mongo del repositorio de Character
@@ -25,12 +24,26 @@ export class MongoCharacterRepository implements CharacterRepository {
                 ok: true,
                 data: CharacterMongoMapper.toDomain(doc)
             }
-        } catch (error) {
+        } catch (error: unknown) {
+            const err = error as any
+
+            if (err?.name === 'ValidationError') {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'VALIDATION',
+                        message: err.message ?? 'Validation error while fetching character by id',
+                        meta: { name: err.name, errors: err.errors },
+                    }
+                }
+            }
+
             return {
                 ok: false,
                 error: {
-                    code: 'NOT_FOUND',
-                    message: 'Error fetching character from database'
+                    code: 'UNKNOWN',
+                    message: err?.message ?? 'Error fetching character from database',
+                    meta: { name: err?.name, stack: err?.stack },
                 }
             }
         }
@@ -157,12 +170,37 @@ export class MongoCharacterRepository implements CharacterRepository {
                 ok: true,
                 data: CharacterMongoMapper.toDomain(updatedDoc)
             }
-        } catch (error) {
+        } catch (error: unknown) {
+            const err = error as any
+
+            if (err?.code === 11000) {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'CONFLICT',
+                        message: 'Character with this name already exists',
+                        meta: { mongoCode: err.code, keyValue: err.keyValue },
+                    }
+                }
+            }
+
+            if (err?.name === 'ValidationError') {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'VALIDATION',
+                        message: err.message ?? 'Validation error while updating character',
+                        meta: { name: err.name, errors: err.errors },
+                    }
+                }
+            }
+
             return {
                 ok: false,
                 error: {
                     code: 'UNKNOWN',
-                    message: 'Error updating character in database'
+                    message: err?.message ?? 'Error updating character in database',
+                    meta: { name: err?.name, stack: err?.stack },
                 }
             }
         }

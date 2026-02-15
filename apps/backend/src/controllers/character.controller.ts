@@ -45,6 +45,7 @@ export class CharacterController {
 
     //PATCH /characters/:id
     async update(req: Request, res: Response): Promise<void> {
+        // Status transitions (publish/unpublish/archive) will be handled by explicit domain actions.
         const result = await this.updateCharacterService.execute(
             req.params.id as any,
             req.body
