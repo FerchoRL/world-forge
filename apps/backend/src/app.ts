@@ -17,6 +17,11 @@ export function createApp() {
     //Character routes
     app.use('/characters', characterRoutes)
 
+    // Global JSON 404 for unknown routes
+    app.use((_req, res) => {
+        res.status(404).json({ error: 'Route not found' })
+    })
+
     // Global error handling
     app.use(errorHandler)
 
