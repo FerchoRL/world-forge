@@ -1,5 +1,19 @@
 # React + TypeScript + Vite
 
+## Environment modes
+
+This frontend uses Vite modes to connect to the correct backend environment:
+
+- `development` mode → reads `.env.development` (`VITE_API_BASE_URL=http://localhost:3001`)
+- `test` mode → reads `.env.test` (`VITE_API_BASE_URL=http://localhost:3002`)
+
+Scripts:
+
+- `npm run dev` (development backend)
+- `npm run dev:test` (test backend)
+- `npm run build:test` (test mode build)
+- `npm run preview:test` (test mode preview)
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

@@ -38,6 +38,7 @@ export const characterService = {
                 identity: character.identity,
                 inspirations: character.inspirations,
                 notes: character.notes,
+                image: character.image,
             })),
             page: response.page,
             limit: response.limit,
@@ -58,6 +59,7 @@ export const characterService = {
             identity: response.character.identity,
             inspirations: response.character.inspirations,
             notes: response.character.notes,
+            image: response.character.image,
         }
     },
 }

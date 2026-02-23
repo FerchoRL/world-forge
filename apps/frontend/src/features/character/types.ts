@@ -26,6 +26,7 @@ export interface CharacterApiDTO {
   identity: string
   inspirations: string[]
   notes?: string
+  image?: string
 }
 
 // Respuesta al listar personajes
@@ -56,6 +57,7 @@ export interface CharacterListItem {
   identity: string
   inspirations: string[]
   notes?: string
+  image?: string
 }
 
 // Respuesta paginada al listar personajes

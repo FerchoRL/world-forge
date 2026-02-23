@@ -145,6 +145,18 @@ export function CharacterDetailPage() {
                         </p>
                     </CardContent>
                 </Card>
+
+                {/* Image Reference */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Image Reference</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-zinc-700 leading-relaxed">
+                            {selectedCharacter.image ?? "—"}
+                        </p>
+                    </CardContent>
+                </Card>
             </div>
         </div>
     )
