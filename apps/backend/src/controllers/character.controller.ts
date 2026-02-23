@@ -4,6 +4,7 @@ import { GetCharacterByIdService } from '../application/services/character/get-c
 import { ListCharactersService } from '../application/services/character/list-characters.service'
 import { UpdateCharacterService } from '../application/services/character/update-character.service'
 import { ArchiveCharacterService } from '../application/services/character/archive-character.service'
+import { ChangeCharacterStatusService } from '../application/services/character/change-character-status.service'
 
 export class CharacterController {
     constructor(
@@ -11,7 +12,8 @@ export class CharacterController {
         private readonly getCharacterByIdService: GetCharacterByIdService,
         private readonly listCharactersService: ListCharactersService,
         private readonly updateCharacterService: UpdateCharacterService,
-        private readonly archiveCharacterService: ArchiveCharacterService
+        private readonly archiveCharacterService: ArchiveCharacterService,
+        private readonly changeCharacterStatusService: ChangeCharacterStatusService
     ) { }
 
     //POST /characters
@@ -49,6 +51,15 @@ export class CharacterController {
         const result = await this.updateCharacterService.execute(
             req.params.id as any,
             req.body
+        )
+        res.status(200).json(result)
+    }
+
+    //PATCH /characters/:id/status
+    async changeStatus(req: Request, res: Response): Promise<void> {
+        const result = await this.changeCharacterStatusService.execute(
+            req.params.id as string,
+            req.body?.status
         )
         res.status(200).json(result)
     }

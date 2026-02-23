@@ -161,10 +161,20 @@ export class MongoCharacterRepository implements CharacterRepository {
                 ...patch,
             }
 
-            await CharacterModel.updateOne(
+            const updateResult = await CharacterModel.updateOne(
                 { _id: id },
                 { $set: updateDoc }
             )
+
+            if (updateResult.matchedCount === 0) {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'NOT_FOUND',
+                        message: 'Character not found'
+                    }
+                }
+            }
 
             const updatedDoc = await CharacterModel.findById(id).lean()
 
@@ -190,7 +200,7 @@ export class MongoCharacterRepository implements CharacterRepository {
                     ok: false,
                     error: {
                         code: 'CONFLICT',
-                        message: 'Character with this name already exists',
+                        message: 'Character name already exists for an ACTIVE or DRAFT character',
                         meta: { mongoCode: err.code, keyValue: err.keyValue },
                     }
                 }
@@ -212,6 +222,67 @@ export class MongoCharacterRepository implements CharacterRepository {
                 error: {
                     code: 'UNKNOWN',
                     message: err?.message ?? 'Error updating character in database',
+                    meta: { name: err?.name, stack: err?.stack },
+                }
+            }
+        }
+    }
+
+    async changeStatus(
+        id: CharacterId,
+        status: 'ACTIVE' | 'ARCHIVED'
+    ): Promise<RepoResult<Character>> {
+        try {
+            const updateResult = await CharacterModel.updateOne(
+                { _id: id },
+                { $set: { status } }
+            )
+
+            if (updateResult.matchedCount === 0) {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'NOT_FOUND',
+                        message: 'Character not found'
+                    }
+                }
+            }
+
+            const updatedDoc = await CharacterModel.findById(id).lean()
+
+            if (!updatedDoc) {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'NOT_FOUND',
+                        message: 'Character not found after status change'
+                    }
+                }
+            }
+
+            return {
+                ok: true,
+                data: CharacterMongoMapper.toDomain(updatedDoc)
+            }
+        } catch (error: unknown) {
+            const err = error as any
+
+            if (err?.name === 'ValidationError') {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'VALIDATION',
+                        message: err.message ?? 'Validation error while changing character status',
+                        meta: { name: err.name, errors: err.errors },
+                    }
+                }
+            }
+
+            return {
+                ok: false,
+                error: {
+                    code: 'UNKNOWN',
+                    message: err?.message ?? 'Error changing character status in database',
                     meta: { name: err?.name, stack: err?.stack },
                 }
             }

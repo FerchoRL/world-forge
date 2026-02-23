@@ -8,6 +8,7 @@ import { ListCharactersService } from '../application/services/character/list-ch
 import { UpdateCharacterService } from '../application/services/character/update-character.service'
 import { ArchiveCharacterService } from '../application/services/character/archive-character.service'
 import { MongoCharacterRepository } from '../infra/repositories/mongo/mongo-character.repository'
+import { ChangeCharacterStatusService } from '../application/services/character/change-character-status.service'
 
 const router = Router()
 
@@ -39,12 +40,17 @@ const archiveCharacterService = new ArchiveCharacterService(
     characterRepository
 )
 
+const changeCharacterStatusService = new ChangeCharacterStatusService(
+    characterRepository
+)
+
 const characterController = new CharacterController(
     createCharacterService,
     getCharacterByIdService,
     listCharactersService,
     updateCharacterService,
-    archiveCharacterService
+    archiveCharacterService,
+    changeCharacterStatusService
 )
 
 //Rutas
@@ -52,6 +58,7 @@ router.post('/', (req, res) => characterController.create(req, res))
 router.get('/', (req, res) => characterController.list(req, res))
 router.get('/:id', (req, res) => characterController.getById(req, res))
 router.patch('/:id', (req, res) => characterController.update(req, res))
+router.patch('/:id/status', (req, res) => characterController.changeStatus(req, res))
 router.delete('/:id', (req, res) => characterController.archive(req, res))
 
 export default router
