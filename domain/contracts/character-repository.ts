@@ -44,6 +44,4 @@ export interface CharacterRepository {
     updateCore(id: CharacterId, input: UpdateCharacterCoreInput): Promise<RepoResult<Character>>
 
     changeStatus(id: CharacterId, status: 'ACTIVE' | 'ARCHIVED'): Promise<RepoResult<Character>>
-
-    archive(id: CharacterId): Promise<RepoResult<void>>
 }

@@ -6,9 +6,9 @@ import { SimpleIdGenerator } from '../application/ids/simple-id-generator'
 import { GetCharacterByIdService } from '../application/services/character/get-character-by-id.service'
 import { ListCharactersService } from '../application/services/character/list-characters.service'
 import { UpdateCharacterService } from '../application/services/character/update-character.service'
-import { ArchiveCharacterService } from '../application/services/character/archive-character.service'
 import { MongoCharacterRepository } from '../infra/repositories/mongo/mongo-character.repository'
 import { ChangeCharacterStatusService } from '../application/services/character/change-character-status.service'
+import { CreateCharacterFromArchivedService } from '../application/services/character/create-character-from-archived.service'
 
 const router = Router()
 
@@ -36,12 +36,13 @@ const updateCharacterService = new UpdateCharacterService(
     characterRepository
 )
 
-const archiveCharacterService = new ArchiveCharacterService(
+const changeCharacterStatusService = new ChangeCharacterStatusService(
     characterRepository
 )
 
-const changeCharacterStatusService = new ChangeCharacterStatusService(
-    characterRepository
+const createCharacterFromArchivedService = new CreateCharacterFromArchivedService(
+    characterRepository,
+    idGenerator
 )
 
 const characterController = new CharacterController(
@@ -49,16 +50,22 @@ const characterController = new CharacterController(
     getCharacterByIdService,
     listCharactersService,
     updateCharacterService,
-    archiveCharacterService,
-    changeCharacterStatusService
+    changeCharacterStatusService,
+    createCharacterFromArchivedService
 )
 
-//Rutas
+//Rutas de Character (cada una delega en CharacterController)
+// Crea un character nuevo
 router.post('/', (req, res) => characterController.create(req, res))
+// Lista characters paginados
 router.get('/', (req, res) => characterController.list(req, res))
+// Obtiene un character por id
 router.get('/:id', (req, res) => characterController.getById(req, res))
+// Crea un character nuevo usando como base uno archivado
+router.post('/:id/create-from-archived', (req, res) => characterController.createFromArchived(req, res))
+// Actualiza el núcleo conceptual de un character
 router.patch('/:id', (req, res) => characterController.update(req, res))
+// Cambia status (ACTIVE/ARCHIVED) respetando reglas de transición
 router.patch('/:id/status', (req, res) => characterController.changeStatus(req, res))
-router.delete('/:id', (req, res) => characterController.archive(req, res))
 
 export default router

@@ -3,8 +3,8 @@ import { CreateCharacterService } from '../application/services/character/create
 import { GetCharacterByIdService } from '../application/services/character/get-character-by-id.service'
 import { ListCharactersService } from '../application/services/character/list-characters.service'
 import { UpdateCharacterService } from '../application/services/character/update-character.service'
-import { ArchiveCharacterService } from '../application/services/character/archive-character.service'
 import { ChangeCharacterStatusService } from '../application/services/character/change-character-status.service'
+import { CreateCharacterFromArchivedService } from '../application/services/character/create-character-from-archived.service'
 
 export class CharacterController {
     constructor(
@@ -12,23 +12,23 @@ export class CharacterController {
         private readonly getCharacterByIdService: GetCharacterByIdService,
         private readonly listCharactersService: ListCharactersService,
         private readonly updateCharacterService: UpdateCharacterService,
-        private readonly archiveCharacterService: ArchiveCharacterService,
-        private readonly changeCharacterStatusService: ChangeCharacterStatusService
+        private readonly changeCharacterStatusService: ChangeCharacterStatusService,
+        private readonly createCharacterFromArchivedService: CreateCharacterFromArchivedService
     ) { }
 
-    //POST /characters
+    // Crea un character nuevo
     async create(req: Request, res: Response): Promise<void> {
         const result = await this.createCharacterService.execute(req.body)
         res.status(201).json(result)
     }
 
-    //GET /characters/:id
+    // Obtiene detalle de character por id
     async getById(req: Request, res: Response): Promise<void> {
         const result = await this.getCharacterByIdService.execute(req.params.id as string)
         res.status(200).json(result)
     }
 
-    //GET /characters
+    // Lista characters con paginación
     async list(req: Request, res: Response): Promise<void> {
         // Obtener los parámetros de consulta para paginación
         const page =
@@ -45,9 +45,8 @@ export class CharacterController {
         res.status(200).json(result)
     }
 
-    //PATCH /characters/:id
+    // Actualiza campos editables del núcleo conceptual
     async update(req: Request, res: Response): Promise<void> {
-        // Status transitions (publish/unpublish/archive) will be handled by explicit domain actions.
         const result = await this.updateCharacterService.execute(
             req.params.id as any,
             req.body
@@ -55,7 +54,7 @@ export class CharacterController {
         res.status(200).json(result)
     }
 
-    //PATCH /characters/:id/status
+    // Cambia status aplicando reglas de transición del dominio
     async changeStatus(req: Request, res: Response): Promise<void> {
         const result = await this.changeCharacterStatusService.execute(
             req.params.id as string,
@@ -64,12 +63,12 @@ export class CharacterController {
         res.status(200).json(result)
     }
 
-    //DELETE /characters/:id
-
-    async archive(req: Request, res: Response): Promise<void> {
-        const result = await this.archiveCharacterService.execute(
-            req.params.id as any
+    // Crea un character nuevo copiando base conceptual de uno archivado
+    async createFromArchived(req: Request, res: Response): Promise<void> {
+        const result = await this.createCharacterFromArchivedService.execute(
+            req.params.id as string,
+            req.body
         )
-        res.status(200).json(result)
+        res.status(201).json(result)
     }
 }

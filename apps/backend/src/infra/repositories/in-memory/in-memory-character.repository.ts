@@ -107,20 +107,4 @@ export class InMemoryCharacterRepository implements CharacterRepository {
         return { ok: true, data: updated }
     }
 
-    //Archivar personaje (cambiar estado a ARCHIVED)
-    async archive(id: CharacterId): Promise<RepoResult<void>> {
-        const existing = this.store.get(id)
-        if (!existing) {
-            return {
-                ok: false,
-                error: {
-                    code: 'NOT_FOUND',
-                    message: `Character with id ${id} not found`
-                }
-            }
-        }
-        const archived: Character = { ...existing, status: 'ARCHIVED' }
-        this.store.set(id, archived)
-        return { ok: true, data: undefined }
-    }
 }

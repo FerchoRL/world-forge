@@ -13,6 +13,7 @@ import { CharacterMongoMapper } from '../../mappers/character.mongo-mapper'
 
 export class MongoCharacterRepository implements CharacterRepository {
 
+    // Lee un character por id
     async getById(id: CharacterId): Promise<RepoResult<Character | null>> {
         try {
             const doc = await CharacterModel.findById(id).lean()
@@ -49,6 +50,7 @@ export class MongoCharacterRepository implements CharacterRepository {
         }
     }
 
+    // Lista characters de forma paginada
     async list(
         page: number,
         limit: number
@@ -97,6 +99,7 @@ export class MongoCharacterRepository implements CharacterRepository {
     }
 
 
+    // Crea un character en persistencia
     async create(input: CreateCharacterInput): Promise<RepoResult<Character>> {
         try {
             // Mapea a formato de persistencia
@@ -152,6 +155,7 @@ export class MongoCharacterRepository implements CharacterRepository {
         }
     }
 
+    // Actualiza campos del núcleo conceptual
     async updateCore(
         id: CharacterId,
         patch: UpdateCharacterCoreInput
@@ -228,6 +232,7 @@ export class MongoCharacterRepository implements CharacterRepository {
         }
     }
 
+    // Cambia únicamente el status del character
     async changeStatus(
         id: CharacterId,
         status: 'ACTIVE' | 'ARCHIVED'
@@ -289,22 +294,4 @@ export class MongoCharacterRepository implements CharacterRepository {
         }
     }
 
-    async archive(id: CharacterId): Promise<RepoResult<void>> {
-        try {
-            await CharacterModel.updateOne(
-                { _id: id },
-                { $set: { status: 'ARCHIVED' } }
-            )
-
-            return { ok: true, data: undefined }
-        } catch (error) {
-            return {
-                ok: false,
-                error: {
-                    code: 'UNKNOWN',
-                    message: 'Error archiving character in database'
-                }
-            }
-        }
-    }
 }

@@ -5,6 +5,14 @@ import { UpdateCharacterResponse } from '../../dtos/character/update-character.r
 import { CharacterMapper } from '../../mappers/character.mapper'
 import { ValidationError } from '../../errors/validation.error'
 import { mapRepoErrorToAppError } from '../../errors/map-repo-error'
+import {
+    validateCategories,
+    validateIdentity,
+    validateImage,
+    validateInspirations,
+    validateName,
+    validateNotes,
+} from '../../validators/character-core.validator'
 
 export class UpdateCharacterService {
 
@@ -50,69 +58,27 @@ export class UpdateCharacterService {
         }
 
         if ('name' in patch) {
-            if (typeof patch.name !== 'string' || patch.name.trim() === '') {
-                throw new ValidationError('Character Name is required')
-            }
+            validateName(patch.name)
         }
 
         if ('identity' in patch) {
-            if (typeof patch.identity !== 'string' || patch.identity.trim() === '') {
-                throw new ValidationError('Character Identity is required')
-            }
+            validateIdentity(patch.identity)
         }
 
         if ('categories' in patch) {
-            if (!Array.isArray(patch.categories)) {
-                throw new ValidationError('Categories must be an array')
-            }
-
-            if (patch.categories.length === 0) {
-                throw new ValidationError('At least one Category is required')
-            }
-
-            const uniqueCategories = new Set(patch.categories)
-
-            if (uniqueCategories.size !== patch.categories.length) {
-                throw new ValidationError('Categories must not contain duplicates')
-            }
-
-            for (const category of patch.categories) {
-                if (typeof category !== 'string' || !CATEGORIES[category]) {
-                    throw new ValidationError(`Category ${category} is not valid`)
-                }
-            }
+            validateCategories(patch.categories)
         }
 
         if ('inspirations' in patch) {
-            if (!Array.isArray(patch.inspirations)) {
-                throw new ValidationError('Inspirations must be an array')
-            }
-
-            if (patch.inspirations.length === 0) {
-                throw new ValidationError('At least one Inspiration is required')
-            }
-
-            for (const inspiration of patch.inspirations) {
-                if (typeof inspiration !== 'string' || inspiration.trim() === '') {
-                    throw new ValidationError('Each Inspiration must be a non-empty string')
-                }
-            }
+            validateInspirations(patch.inspirations)
         }
 
         if ('notes' in patch && patch.notes !== undefined) {
-            if (typeof patch.notes !== 'string') {
-                throw new ValidationError('Notes must be a string')
-            }
-
-            if (patch.notes.trim() === '') {
-                throw new ValidationError('Notes cannot be empty')
-            }
+            validateNotes(patch.notes)
         }
 
         if ('image' in patch && patch.image !== undefined) {
-            if (typeof patch.image !== 'string') {
-                throw new ValidationError('Image must be a string')
-            }
+            validateImage(patch.image)
         }
 
         const result = await this.repository.updateCore(id, patch)
