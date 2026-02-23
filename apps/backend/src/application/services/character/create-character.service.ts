@@ -7,7 +7,6 @@ import { CharacterDTO } from '../../dtos/character/character.dto'
 import { IdGenerator } from '../../ids/id-generator'
 import { ValidationError } from '../../errors/validation.error'
 import { mapRepoErrorToAppError } from '../../errors/map-repo-error'
-import { isValidStatus } from '../../validators/status.validator'
 
 
 export class CreateCharacterService {
@@ -78,12 +77,16 @@ export class CreateCharacterService {
             }
         }
 
+        if (input.image !== undefined && typeof input.image !== 'string') {
+            throw new ValidationError('Image must be a string')
+        }
+
 
         //Validacion de status
         const status = input.status ?? 'DRAFT'
-        if (!isValidStatus(status)) {
+        if (status !== 'DRAFT' && status !== 'ACTIVE') {
             throw new ValidationError(
-                `Status ${status} is not valid. Allowed values: DRAFT | ACTIVE | ARCHIVED`
+                `Status ${status} is not valid. Allowed values: DRAFT | ACTIVE`
             )
         }
 
@@ -98,7 +101,16 @@ export class CreateCharacterService {
         })
 
         // Persiste
-        const result = await this.repository.create(newCharacter)
+        const result = await this.repository.create({
+            id: newCharacter.id,
+            name: newCharacter.name,
+            status,
+            categories: newCharacter.categories,
+            identity: newCharacter.identity,
+            inspirations: newCharacter.inspirations,
+            notes: newCharacter.notes,
+            image: newCharacter.image,
+        })
 
         if (!result.ok) {
             // Traduce el error del repositorio a error de aplicación

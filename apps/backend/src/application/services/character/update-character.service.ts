@@ -30,6 +30,7 @@ export class UpdateCharacterService {
             'identity',
             'inspirations',
             'notes',
+            'image',
         ] as const
 
         const patchKeys = Object.keys(patch)
@@ -108,7 +109,13 @@ export class UpdateCharacterService {
             }
         }
 
-        const result = await this.repository.update(id, patch as any)
+        if ('image' in patch && patch.image !== undefined) {
+            if (typeof patch.image !== 'string') {
+                throw new ValidationError('Image must be a string')
+            }
+        }
+
+        const result = await this.repository.updateCore(id, patch)
 
         if (!result.ok) {
             throw mapRepoErrorToAppError(result.error)

@@ -1,4 +1,4 @@
-import { Character, CharacterRepository } from '@world-forge/domain'
+import { Character, CharacterRepository, CreateCharacterInput, UpdateCharacterCoreInput } from '@world-forge/domain'
 import { RepoResult } from '@world-forge/domain'
 import { CharacterId } from '@world-forge/domain'
 
@@ -97,12 +97,24 @@ export class MongoCharacterRepository implements CharacterRepository {
     }
 
 
-    async create(input: Character): Promise<RepoResult<Character>> {
+    async create(input: CreateCharacterInput): Promise<RepoResult<Character>> {
         try {
             // Mapea a formato de persistencia
             const doc = CharacterMongoMapper.toPersistence(input)
             await CharacterModel.create(doc)
-            return { ok: true, data: input }
+            return {
+                ok: true,
+                data: {
+                    id: input.id,
+                    name: input.name,
+                    status: input.status,
+                    categories: input.categories,
+                    identity: input.identity,
+                    inspirations: input.inspirations,
+                    notes: input.notes,
+                    image: input.image,
+                }
+            }
         } catch (error: unknown) {
             //Clasificacion de errores de DB para RepoResult (Sin HTTP aqui)
             const err = error as any
@@ -112,7 +124,7 @@ export class MongoCharacterRepository implements CharacterRepository {
                     ok: false,
                     error: {
                         code: 'CONFLICT',
-                        message: 'Character with this ID already exists',
+                        message: 'Character name already exists for an ACTIVE or DRAFT character',
                         meta: { mongoCode: err.code, keyValue: err.keyValue }
                     }
                 }
@@ -140,9 +152,9 @@ export class MongoCharacterRepository implements CharacterRepository {
         }
     }
 
-    async update(
+    async updateCore(
         id: CharacterId,
-        patch: Partial<Character>
+        patch: UpdateCharacterCoreInput
     ): Promise<RepoResult<Character>> {
         try {
             const updateDoc = {

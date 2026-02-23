@@ -1,8 +1,9 @@
 import {
     Character,
     CharacterId,
+    CreateCharacterInput,
     CharacterRepository,
-    Status
+    UpdateCharacterCoreInput
 } from '@world-forge/domain'
 
 import { RepoResult } from '@world-forge/domain'
@@ -25,21 +26,45 @@ export class InMemoryCharacterRepository implements CharacterRepository {
     }
 
     //Listar todos los personajes
-    async list(): Promise<RepoResult<Character[]>> {
+    async list(
+        page: number,
+        limit: number
+    ): Promise<RepoResult<{ items: Character[]; total: number }>> {
         const characters = Array.from(this.store.values())
-        return { ok: true, data: characters }
+        const total = characters.length
+        const start = (page - 1) * limit
+        const items = characters.slice(start, start + limit)
+
+        return {
+            ok: true,
+            data: {
+                items,
+                total
+            }
+        }
     }
 
     //Crear nuevo personaje
-    async create(input: Character): Promise<RepoResult<Character>> {
-        this.store.set(input.id, input)
-        return { ok: true, data: input }
+    async create(input: CreateCharacterInput): Promise<RepoResult<Character>> {
+        const character: Character = {
+            id: input.id,
+            name: input.name,
+            status: input.status,
+            categories: input.categories,
+            identity: input.identity,
+            inspirations: input.inspirations,
+            notes: input.notes,
+            image: input.image,
+        }
+
+        this.store.set(input.id, character)
+        return { ok: true, data: character }
     }
 
     //Actualizar personaje existente
-    async update(
+    async updateCore(
         id: CharacterId,
-        patch: Partial<Character>
+        patch: UpdateCharacterCoreInput
     ): Promise<RepoResult<Character>> {
         const existing = this.store.get(id)
         if (!existing) {

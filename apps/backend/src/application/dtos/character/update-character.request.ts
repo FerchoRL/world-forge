@@ -6,4 +6,5 @@ export interface UpdateCharacterRequest {
     identity?: string
     inspirations?: string[]
     notes?: string
+    image?: string
 }

@@ -1,4 +1,4 @@
-import { CategoryName, Status } from '@world-forge/domain'
+import { CategoryName } from '@world-forge/domain'
 
 /**
  * Datos de entrada para crear un Character
@@ -9,9 +9,10 @@ import { CategoryName, Status } from '@world-forge/domain'
 
 export interface CreateCharacterRequest {
     name: string
-    status: Status
+    status?: 'DRAFT' | 'ACTIVE'
     categories: CategoryName[]
     identity: string
     inspirations: string[]
     notes?: string
+    image?: string
 }

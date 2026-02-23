@@ -9,6 +9,17 @@ export function errorHandler(
     res: Response,
     _next: NextFunction
 ): void {
+    const parseError = error as { type?: string; status?: number; statusCode?: number }
+
+    if (
+        parseError?.type === 'entity.parse.failed' ||
+        parseError?.status === 400 ||
+        parseError?.statusCode === 400
+    ) {
+        res.status(400).json({ error: 'Invalid JSON body' })
+        return
+    }
+
     if (error instanceof ValidationError) {
         res.status(400).json({ error: error.message })
         return

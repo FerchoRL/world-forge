@@ -13,7 +13,7 @@ import { CharacterDTO } from '../dtos/character/character.dto'
 export class CharacterMapper {
     static toDomain(
         id: CharacterId,
-        input: CreateCharacterRequest
+        input: CreateCharacterRequest & { status: 'DRAFT' | 'ACTIVE' }
     ): Character {
         return{
             id,
@@ -22,7 +22,8 @@ export class CharacterMapper {
             categories: input.categories,
             identity: input.identity,
             inspirations: input.inspirations,
-            notes: input.notes
+            notes: input.notes,
+            image: input.image,
         }
     }
 
@@ -34,7 +35,8 @@ export class CharacterMapper {
             categories: character.categories,
             identity: character.identity,
             inspirations: character.inspirations,
-            notes: character.notes
+            notes: character.notes,
+            image: character.image,
         }
     }
 }

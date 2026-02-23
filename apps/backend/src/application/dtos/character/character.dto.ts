@@ -15,4 +15,5 @@ export interface CharacterDTO {
     identity: string
     inspirations: string[]
     notes?: string
+    image?: string
 }

@@ -20,4 +20,7 @@ export interface Character {
     //Cajon de ideas sueltas
     notes?: string
 
+    // Referencia visual conceptual base (no contenido binario)
+    image?: string
+
 }
