@@ -2,7 +2,7 @@ import { CharacterRepository } from '@world-forge/domain'
 
 import { CharacterMapper } from '../../mappers/character.mapper'
 import { CreateCharacterRequest } from '../../dtos/character/create-character.request'
-import { CharacterDTO } from '../../dtos/character/character.dto'
+import { CreateCharacterResponse } from '../../dtos/character/create-character.response'
 import { IdGenerator } from '../../ids/id-generator'
 import { ValidationError } from '../../errors/validation.error'
 import { mapRepoErrorToAppError } from '../../errors/map-repo-error'
@@ -22,7 +22,7 @@ export class CreateCharacterService {
         private readonly idGenerator: IdGenerator
     ) { }
 
-    async execute(input: CreateCharacterRequest): Promise<CharacterDTO> {
+    async execute(input: CreateCharacterRequest): Promise<CreateCharacterResponse> {
         validateCharacterCoreInput({
             name: input.name,
             identity: input.identity,
@@ -69,6 +69,8 @@ export class CreateCharacterService {
         }
 
         // Mapea a DTO y retorna
-        return CharacterMapper.toDTO(result.data)
+        return {
+            character: CharacterMapper.toDTO(result.data),
+        }
     }
 }

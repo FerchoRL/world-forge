@@ -272,6 +272,17 @@ export class MongoCharacterRepository implements CharacterRepository {
         } catch (error: unknown) {
             const err = error as any
 
+            if (err?.code === 11000) {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'CONFLICT',
+                        message: 'Character name already exists for an ACTIVE or DRAFT character',
+                        meta: { mongoCode: err.code, keyValue: err.keyValue },
+                    }
+                }
+            }
+
             if (err?.name === 'ValidationError') {
                 return {
                     ok: false,
