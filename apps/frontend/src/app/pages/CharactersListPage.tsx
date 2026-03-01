@@ -1,8 +1,9 @@
+import { useNavigate } from 'react-router-dom'
 import { Plus, Eye, Pencil, Search } from 'lucide-react'
 import { useEffect } from 'react'
 
 import { useCharacterStore } from '@/features/character/store/characterStore'
-import type { CharacterListItem } from '@/features/character/types'
+import type { CharacterListItem, StatusFilter } from '@/features/character/types'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,26 +16,42 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-
-const statusColors: Record<string, string> = {
-  ACTIVE: 'bg-green-100 text-green-800',
-  DRAFT: 'bg-yellow-100 text-yellow-800',
-  ARCHIVED: 'bg-zinc-100 text-zinc-600',
-}
+import { getCharacterStatusClass } from '@/features/character/ui/statusBadge'
 
 export function CharactersListPage() {
-  // 🔵 Zustand state
-  const characters = useCharacterStore((s) => s.characters)
-  const loading = useCharacterStore((s) => s.charactersLoading)
+  const navigate = useNavigate()
+
+  // Store state
+  const filteredCharacters = useCharacterStore((s) => s.filteredCharacters)
+  const charactersLoading = useCharacterStore((s) => s.charactersLoading)
   const error = useCharacterStore((s) => s.charactersError)
-  const fetchCharacters = useCharacterStore((s) => s.fetchCharacters)
 
-  // 🔵 Load data once
+  const {
+    hasMore,
+    fetchInitialCharacters,
+    loadMoreCharacters,
+  } = useCharacterStore()
+
+  const searchTerm = useCharacterStore((s) => s.searchTerm)
+  const statusFilter = useCharacterStore((s) => s.statusFilter)
+
+  const setSearchTerm = useCharacterStore((s) => s.setSearchTerm)
+  const setStatusFilter = useCharacterStore((s) => s.setStatusFilter)
+
+  // Ejecutamos el selector DERIVADO fuera del hook
+  const characters = filteredCharacters()
+
+  // ======================
+  // Effects
+  // ======================
   useEffect(() => {
-    fetchCharacters()
-  }, [fetchCharacters])
+    fetchInitialCharacters()
+  }, [fetchInitialCharacters])
 
-  if (loading) {
+  // ======================
+  // States
+  // ======================
+  if (charactersLoading) {
     return <div className="p-8">Loading characters…</div>
   }
 
@@ -44,7 +61,9 @@ export function CharactersListPage() {
 
   return (
     <div className="p-8 space-y-6">
-      {/* Header */}
+      {/* ======================
+          Header
+         ====================== */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl mb-2">Characters</h1>
@@ -53,63 +72,82 @@ export function CharactersListPage() {
           </p>
         </div>
 
-        {/* TODO: Create new character */}
         <Button className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
           New Character
         </Button>
       </div>
 
-      {/* Filters (UI only for now) */}
+      {/* ======================
+          Filters
+         ====================== */}
       <div className="bg-white border border-zinc-200 rounded-lg p-4">
         <div className="flex gap-4">
+          {/* Search */}
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-            <Input placeholder="Search characters..." className="pl-10" />
+            <Input
+              placeholder="Search characters..."
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
 
-          <select className="px-4 py-2 border border-zinc-300 rounded-md bg-white text-sm">
-            <option>All Statuses</option>
-            <option>ACTIVE</option>
-            <option>DRAFT</option>
-            <option>ARCHIVED</option>
+          {/* Status filter */}
+          <select
+            className="px-4 py-2 border border-zinc-300 rounded-md bg-white text-sm"
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(e.target.value as StatusFilter)
+            }
+          >
+            <option value="ALL">All Statuses</option>
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="DRAFT">DRAFT</option>
+            <option value="ARCHIVED">ARCHIVED</option>
           </select>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
-        <Table className="table-fixed w-full">
+      {/* ======================
+          Table
+         ====================== */}
+      <div className="bg-white border border-zinc-200 rounded-lg overflow-x-auto">
+        <Table className="table-fixed min-w-290">
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Categories</TableHead>
-              <TableHead className="w-55">Identity</TableHead>
-              <TableHead className="w-55">Inspirations</TableHead>
-              <TableHead className="w-60">Notes</TableHead>
-              <TableHead className="text-right w-25">Actions</TableHead>
+              <TableHead className="w-40">Name</TableHead>
+              <TableHead className="w-30">Status</TableHead>
+              <TableHead className="w-50">Categories</TableHead>
+              <TableHead className="w-65">Identity</TableHead>
+              <TableHead className="w-65">Inspirations</TableHead>
+              <TableHead className="w-40 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
 
           <TableBody>
             {characters.map((character: CharacterListItem) => (
               <TableRow key={character.id}>
-                <TableCell>{character.name}</TableCell>
+                {/* Name */}
+                <TableCell className="w-40 truncate">
+                  {character.name}
+                </TableCell>
 
-                <TableCell>
+                {/* Status */}
+                <TableCell className="w-30">
                   <Badge
                     variant="secondary"
-                    className={statusColors[character.status]}
+                    className={getCharacterStatusClass(character.status)}
                   >
                     {character.status}
                   </Badge>
                 </TableCell>
 
                 {/* Categories */}
-                <TableCell>
+                <TableCell className="w-50">
                   <div
-                    className="block max-w-55 overflow-hidden whitespace-nowrap text-ellipsis"
+                    className="truncate"
                     title={character.categories.join(', ')}
                   >
                     {character.categories.join(', ')}
@@ -117,51 +155,78 @@ export function CharactersListPage() {
                 </TableCell>
 
                 {/* Identity */}
-                <TableCell>
-                  <div
-                    className="block max-w-55 overflow-hidden whitespace-nowrap text-ellipsis"
-                    title={character.identity}
-                  >
+                <TableCell className="w-65">
+                  <div className="truncate" title={character.identity}>
                     {character.identity}
                   </div>
                 </TableCell>
 
                 {/* Inspirations */}
-                <TableCell>
+                <TableCell className="w-65">
                   <div
-                    className="block max-w-55 overflow-hidden whitespace-nowrap text-ellipsis"
+                    className="truncate"
                     title={character.inspirations.join(', ')}
                   >
                     {character.inspirations.join(', ')}
                   </div>
                 </TableCell>
 
-                {/* Notes */}
-                <TableCell>
-                  <div
-                    className="block max-w-60 overflow-hidden whitespace-nowrap text-ellipsis text-zinc-500 italic"
-                    title={character.notes ?? ''}
-                  >
-                    {character.notes ?? '—'}
-                  </div>
-                </TableCell>
-
                 {/* Actions */}
-                <TableCell>
-                  <div className="flex items-center justify-end gap-2">
-                    <Button variant="ghost" size="sm">
+                <TableCell className="w-40">
+                  <div className="flex items-center justify-end gap-2 whitespace-nowrap">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex items-center gap-1"
+                      onClick={() =>
+                        navigate(`/characters/${character.id}`)
+                      }
+                    >
                       <Eye className="w-4 h-4" />
+                      View
                     </Button>
-                    <Button variant="ghost" size="sm">
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex items-center gap-1"
+                      onClick={() =>
+                        navigate(`/characters/${character.id}/edit`)
+                      }
+                    >
                       <Pencil className="w-4 h-4" />
+                      Edit
                     </Button>
                   </div>
                 </TableCell>
               </TableRow>
             ))}
+
+            {/* Empty state */}
+            {characters.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={6}
+                  className="text-center text-zinc-500 py-8"
+                >
+                  No characters found
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
+      {hasMore && (
+        <div className="flex justify-center mt-6">
+          <Button
+            onClick={loadMoreCharacters}
+            disabled={charactersLoading}
+          >
+            {charactersLoading ? 'Loading...' : 'Load more'}
+          </Button>
+        </div>
+      )}
+
     </div>
   )
 }

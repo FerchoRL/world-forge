@@ -1,10 +1,11 @@
 import { CategoryName } from '@world-forge/domain'
 
-export interface UpdateCharacterRequest {
+export interface CreateCharacterFromArchivedRequest {
     name?: string
-    categories?: CategoryName[]
     identity?: string
+    categories?: CategoryName[]
     inspirations?: string[]
     notes?: string
     image?: string
+    status?: 'DRAFT' | 'ACTIVE'
 }

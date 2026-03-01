@@ -8,6 +8,7 @@ type CharacterDocument = {
     identity: string
     inspirations: string[]
     notes?: string | null
+    image?: string | null
 }
 
 /**
@@ -25,6 +26,7 @@ export class CharacterMongoMapper {
             identity: character.identity,
             inspirations: character.inspirations,
             notes: character.notes,
+            image: character.image,
         }
     }
 
@@ -37,6 +39,7 @@ export class CharacterMongoMapper {
             identity: doc.identity,
             inspirations: doc.inspirations,
             notes: doc.notes ?? undefined,
+            image: doc.image ?? undefined,
         }
     }
 }

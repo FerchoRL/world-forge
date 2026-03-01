@@ -1,38 +1,65 @@
 import { httpClient } from '@/app/api/httpClient'
 
-import type{
+import type {
     CharacterApiDTO,
     ListCharactersApiResponse,
     CharacterListItem,
+    GetCharacterByIdApiResponse,
+    PaginatedCharactersResponse,
 } from '@/features/character/types'
-
-/**
- * ===== Shapes que vienen DEL BACKEND =====
- * (solo forma de datos, no lógica)
- */
 
 /**
  * ===== Service =====
  * Traduce backend → frontend
  * NO conoce UI
- * NO conoce fetch
+ * NO conoce estado
  */
-
 export const characterService = {
 
-    //
-    async getAll(): Promise<CharacterListItem[]> {
+    // Obtener todos los personajes
+    async getAll(params: { page?: number, limit?: number }): Promise<PaginatedCharactersResponse> {
+        const query = new URLSearchParams({
+            page: String(params.page),
+            limit: String(params.limit),
+        })
         const response =
-            await httpClient.get<ListCharactersApiResponse>('/characters')
+            await httpClient.get<ListCharactersApiResponse & {
+                page: number
+                limit: number
+                total: number
+            }>(`/characters?${query.toString()}`)
 
-        return response.characters.map((character: CharacterApiDTO) => ({
-            id: character.id,
-            name: character.name,
-            status: character.status,
-            categories: character.categories,
-            identity: character.identity,
-            inspirations: character.inspirations,
-            notes: character.notes,
-        }))
+        return {
+            characters: response.characters.map((character: CharacterApiDTO) => ({
+                id: character.id,
+                name: character.name,
+                status: character.status,
+                categories: character.categories,
+                identity: character.identity,
+                inspirations: character.inspirations,
+                notes: character.notes,
+                image: character.image,
+            })),
+            page: response.page,
+            limit: response.limit,
+            total: response.total,
+        }
+    },
+
+    // Obtener un personaje por su ID
+    async getById(id: string): Promise<CharacterListItem> {
+        const response =
+            await httpClient.get<GetCharacterByIdApiResponse>(`/characters/${id}`)
+
+        return {
+            id: response.character.id,
+            name: response.character.name,
+            status: response.character.status,
+            categories: response.character.categories,
+            identity: response.character.identity,
+            inspirations: response.character.inspirations,
+            notes: response.character.notes,
+            image: response.character.image,
+        }
     },
 }

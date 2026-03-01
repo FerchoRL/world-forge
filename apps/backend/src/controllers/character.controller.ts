@@ -1,12 +1,10 @@
 import { Request, Response } from 'express'
 import { CreateCharacterService } from '../application/services/character/create-character.service'
-import { ValidationError } from '../application/errors/validation.error'
-import { CharacterRepository } from '@world-forge/domain'
-import { IdGenerator } from '../application/ids/id-generator'
 import { GetCharacterByIdService } from '../application/services/character/get-character-by-id.service'
 import { ListCharactersService } from '../application/services/character/list-characters.service'
 import { UpdateCharacterService } from '../application/services/character/update-character.service'
-import { ArchiveCharacterService } from '../application/services/character/archive-character.service'
+import { ChangeCharacterStatusService } from '../application/services/character/change-character-status.service'
+import { CreateCharacterFromArchivedService } from '../application/services/character/create-character-from-archived.service'
 
 export class CharacterController {
     constructor(
@@ -14,84 +12,63 @@ export class CharacterController {
         private readonly getCharacterByIdService: GetCharacterByIdService,
         private readonly listCharactersService: ListCharactersService,
         private readonly updateCharacterService: UpdateCharacterService,
-        private readonly archiveCharacterService: ArchiveCharacterService
-    ) {}
+        private readonly changeCharacterStatusService: ChangeCharacterStatusService,
+        private readonly createCharacterFromArchivedService: CreateCharacterFromArchivedService
+    ) { }
 
-    //POST /characters
+    // Crea un character nuevo
     async create(req: Request, res: Response): Promise<void> {
-        try {
-            const result = await this.createCharacterService.execute(req.body)
-            res.status(201).json(result)
-        } catch (error) {
-            if (error instanceof ValidationError) {
-                res.status(400).json({ error: error.message })
-            } else {
-                res.status(500).json({ error: 'Internal Server Error' })
-            }
-        }
+        const result = await this.createCharacterService.execute(req.body)
+        res.status(201).json(result)
     }
 
-    //GET /characters/:id
+    // Obtiene detalle de character por id
     async getById(req: Request, res: Response): Promise<void> {
-        try {
-            const result = await this.getCharacterByIdService.execute(req.params.id as string)
-            res.status(200).json(result)
-        } catch (error) {
-            if (error instanceof ValidationError) {
-                res.status(400).json({ error: error.message })
-            } else {
-                res.status(500).json({ error: 'Internal Server Error' })
-            }
-        }
+        const result = await this.getCharacterByIdService.execute(req.params.id as string)
+        res.status(200).json(result)
     }
 
-    //GET /characters
-    async list(_req: Request, res: Response): Promise<void> {
-        try {
-            const result = await this.listCharactersService.execute()
-            res.status(200).json(result)
-        } catch (error) {
-            console.error(error)
-            res.status(500).json({ message: 'Internal server error' })
-        }
+    // Lista characters con paginación
+    async list(req: Request, res: Response): Promise<void> {
+        // Obtener los parámetros de consulta para paginación
+        const page =
+            req.query.page !== undefined ? Number(req.query.page) : undefined
+
+        const limit =
+            req.query.limit !== undefined ? Number(req.query.limit) : undefined
+
+        const result = await this.listCharactersService.execute({
+            page,
+            limit,
+        })
+
+        res.status(200).json(result)
     }
 
-    //PATCH /characters/:id
+    // Actualiza campos editables del núcleo conceptual
     async update(req: Request, res: Response): Promise<void> {
-        try {
-            const result = await this.updateCharacterService.execute(
-                req.params.id as any,
-                req.body
-            )
-            res.status(200).json(result)
-        } catch (error) {
-            if (error instanceof ValidationError) {
-                res.status(400).json({ message: error.message })
-                return
-            }
-
-            console.error(error)
-            res.status(500).json({ message: 'Internal server error' })
-        }
+        const result = await this.updateCharacterService.execute(
+            req.params.id as any,
+            req.body
+        )
+        res.status(200).json(result)
     }
 
-    //DELETE /characters/:id
+    // Cambia status aplicando reglas de transición del dominio
+    async changeStatus(req: Request, res: Response): Promise<void> {
+        const result = await this.changeCharacterStatusService.execute(
+            req.params.id as string,
+            req.body?.status
+        )
+        res.status(200).json(result)
+    }
 
-    async archive(req: Request, res: Response): Promise<void> {
-        try {
-            const result = await this.archiveCharacterService.execute(
-                req.params.id as any
-            )
-            res.status(200).json(result)
-        } catch (error) {
-            if (error instanceof ValidationError) {
-                res.status(400).json({ message: error.message })
-                return
-            }
-
-            console.error(error)
-            res.status(500).json({ message: 'Internal server error' })
-        }
+    // Crea un character nuevo copiando base conceptual de uno archivado
+    async createFromArchived(req: Request, res: Response): Promise<void> {
+        const result = await this.createCharacterFromArchivedService.execute(
+            req.params.id as string,
+            req.body
+        )
+        res.status(201).json(result)
     }
 }
-    

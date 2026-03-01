@@ -1,33 +1,25 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
+    /* 👇 MUY IMPORTANTE */
+    "baseUrl": "src",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["*"],
+      "@world-forge/domain": ["../../../domain/index"]
     },
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "target": "ES2022",
+
+    "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+
     "module": "ESNext",
-    "types": ["vite/client"],
-    "skipLibCheck": true,
+    "moduleResolution": "Bundler",
 
-    /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "moduleDetection": "force",
-    "noEmit": true,
     "jsx": "react-jsx",
+    "isolatedModules": true,
+    "noEmit": true,
 
-    /* Linting */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "skipLibCheck": true
   },
   "include": ["src"]
 }

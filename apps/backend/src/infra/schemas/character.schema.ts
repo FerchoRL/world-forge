@@ -9,7 +9,7 @@ const CharacterSchema = new Schema({
     name: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
     },
 
     status: {
@@ -39,10 +39,25 @@ const CharacterSchema = new Schema({
         type: String,
         required: false,
     },
+
+    image: {
+        type: String,
+        required: false,
+    },
 },
     {
         timestamps: true,
         versionKey: false
+    }
+)
+
+CharacterSchema.index(
+    { name: 1 },
+    {
+        unique: true,
+        partialFilterExpression: {
+            status: { $in: ['DRAFT', 'ACTIVE'] },
+        },
     }
 )
 
