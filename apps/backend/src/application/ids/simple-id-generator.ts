@@ -1,8 +1,13 @@
-import { CharacterId } from '@world-forge/domain'
+import { CharacterId, UniverseId } from '@world-forge/domain'
+import { ulid } from 'ulid'
 import { IdGenerator } from './id-generator'
 
 export class SimpleIdGenerator implements IdGenerator {
-    generate(): CharacterId {
-        return `char_${Math.random().toString(36).substring(2, 10)}` as CharacterId 
+    generateCharacterId(): CharacterId {
+        return `CHAR_${ulid()}` as CharacterId
+    }
+
+    generateUniverseId(): UniverseId {
+        return `UNIVERSE_${ulid()}` as UniverseId
     }
 }
