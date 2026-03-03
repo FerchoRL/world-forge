@@ -238,29 +238,22 @@ export class MongoCharacterRepository implements CharacterRepository {
         status: 'ACTIVE' | 'ARCHIVED'
     ): Promise<RepoResult<Character>> {
         try {
-            const updateResult = await CharacterModel.updateOne(
+            const updatedDoc = await CharacterModel.findOneAndUpdate(
                 { _id: id },
-                { $set: { status } }
-            )
-
-            if (updateResult.matchedCount === 0) {
-                return {
-                    ok: false,
-                    error: {
-                        code: 'NOT_FOUND',
-                        message: 'Character not found'
-                    }
+                { $set: { status } },
+                {
+                    new: true,
+                    runValidators: true,
+                    lean: true,
                 }
-            }
-
-            const updatedDoc = await CharacterModel.findById(id).lean()
+            )
 
             if (!updatedDoc) {
                 return {
                     ok: false,
                     error: {
                         code: 'NOT_FOUND',
-                        message: 'Character not found after status change'
+                        message: 'Character not found'
                     }
                 }
             }
