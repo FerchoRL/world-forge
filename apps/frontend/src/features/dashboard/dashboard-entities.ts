@@ -37,13 +37,12 @@ export type DashboardEntity = {
   to?: string
 }
 
-type DashboardEntityMeta = Omit<DashboardEntity, 'key'>
+type DashboardEntityMeta = Omit<DashboardEntity, 'key' | 'count'>
 
 const dashboardEntityMetaByModel: Record<DomainModelKey, DashboardEntityMeta> = {
   character: {
     singular: 'Character',
     plural: 'Characters',
-    count: 47,
     icon: Users,
     color: 'bg-blue-500',
     to: '/characters',
@@ -51,57 +50,66 @@ const dashboardEntityMetaByModel: Record<DomainModelKey, DashboardEntityMeta> = 
   characterVariant: {
     singular: 'Character Variant',
     plural: 'Character Variants',
-    count: 124,
     icon: UserRound,
     color: 'bg-violet-500',
   },
   story: {
     singular: 'Story',
     plural: 'Stories',
-    count: 12,
     icon: BookOpen,
     color: 'bg-green-500',
   },
   universe: {
     singular: 'Universe',
     plural: 'Universes',
-    count: 5,
     icon: Globe,
     color: 'bg-amber-500',
   },
   location: {
     singular: 'Location',
     plural: 'Locations',
-    count: 83,
     icon: MapPin,
     color: 'bg-red-500',
   },
   arc: {
     singular: 'Arc',
     plural: 'Arcs',
-    count: 28,
     icon: GitBranch,
     color: 'bg-teal-500',
   },
 }
 
-export const dashboardEntities: DashboardEntity[] = (
-  Object.keys(dashboardEntityMetaByModel) as DomainModelKey[]
-).map((key) => ({
-  key,
-  ...dashboardEntityMetaByModel[key],
-}))
+const modelOrder: DomainModelKey[] = [
+  'character',
+  'characterVariant',
+  'story',
+  'universe',
+  'location',
+  'arc',
+]
 
-export const statCards = dashboardEntities.map((entity) => ({
-  title: entity.plural,
-  count: entity.count,
-  icon: entity.icon,
-  color: entity.color,
-  to: entity.to,
-}))
+export function buildDashboardEntities(characterCount: number): DashboardEntity[] {
+  return modelOrder.map((key) => ({
+    key,
+    ...dashboardEntityMetaByModel[key],
+    count: key === 'character' ? characterCount : 0,
+  }))
+}
 
-export const quickActions = dashboardEntities.map((entity) => ({
-  key: entity.key,
-  lineOne: 'New',
-  lineTwo: entity.singular,
-}))
+export function buildStatCards(entities: DashboardEntity[]) {
+  return entities.map((entity) => ({
+    title: entity.plural,
+    count: entity.count,
+    icon: entity.icon,
+    color: entity.color,
+    to: entity.to,
+  }))
+}
+
+export function buildQuickActions(entities: DashboardEntity[]) {
+  return entities.map((entity) => ({
+    key: entity.key,
+    lineOne: 'New',
+    lineTwo: entity.singular,
+  }))
+}

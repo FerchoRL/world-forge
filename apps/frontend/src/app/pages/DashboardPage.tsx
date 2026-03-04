@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import { Plus } from 'lucide-react'
-import { quickActions, statCards } from '@/app/config/dashboard-entities'
+import { useDashboardStats } from '@/features/dashboard/useDashboardStats'
 
 export function DashboardPage() {
+  const { quickActions, statCards } = useDashboardStats()
+
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
       <div className="mb-5 sm:mb-6">

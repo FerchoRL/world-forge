@@ -4,6 +4,7 @@ import {
   BookOpen,
   GitBranch,
   Globe,
+  HeartPulse,
   Home,
   MapPin,
   UserRound,
@@ -22,6 +23,7 @@ const navItems = [
   { label: 'Universes', icon: Globe, to: undefined },
   { label: 'Locations', icon: MapPin, to: undefined },
   { label: 'Arcs', icon: GitBranch, to: undefined },
+  { label: 'Healthcheck', icon: HeartPulse, to: '/health' },
 ]
 
 export function AppShell({ children }: Props) {
@@ -84,12 +86,8 @@ export function AppShell({ children }: Props) {
 
       {/* Main */}
       <div className="flex-1 flex flex-col">
-        <header className="h-16 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between px-8">
+        <header className="h-16 bg-zinc-50 border-b border-zinc-200 flex items-center px-8">
           <span className="text-lg text-zinc-500">{pageLabel}</span>
-          <div className="flex items-center gap-8 text-lg text-zinc-700">
-            <button type="button">Settings</button>
-            <button type="button">Account</button>
-          </div>
         </header>
 
         <main className="flex-1 overflow-auto">
