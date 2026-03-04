@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 
 import { RootLayout } from './layout/RootLayout'
 
+import { DashboardPage } from './pages/DashboardPage'
 import { CharactersListPage } from './pages/CharactersListPage'
 import { CharacterDetailPage } from './pages/CharacterDetailPage'
 import { HealthPage } from './pages/HealthPage'
@@ -13,7 +14,8 @@ export const router = createBrowserRouter([
         element: <RootLayout />,
         errorElement: <NotFoundPage />,
         children: [
-            { index: true, element: <Navigate to ="/" replace /> },
+            { index: true, element: <DashboardPage /> },
+            { path: 'dashboard', element: <Navigate to="/" replace /> },
             { path: 'characters', element: <CharactersListPage /> },
             { path: 'characters/:id', element: <CharacterDetailPage /> },
             { path: 'health', element: <HealthPage /> }
