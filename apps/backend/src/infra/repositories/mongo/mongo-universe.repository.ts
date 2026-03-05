@@ -49,12 +49,35 @@ export class MongoUniverseRepository implements UniverseRepository {
     }
 
     async list(): Promise<RepoResult<Universe[]>> {
-        return {
-            ok: false,
-            error: {
-                code: 'UNKNOWN',
-                message: 'Not implemented yet: list',
-            },
+        try {
+            const docs = await UniverseModel.find({}).lean()
+
+            return {
+                ok: true,
+                data: docs.map(UniverseMongoMapper.toDomain),
+            }
+        } catch (error: unknown) {
+            const err = error as any
+
+            if (err?.name === 'ValidationError') {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'VALIDATION',
+                        message: err.message ?? 'Validation error while listing universes',
+                        meta: { name: err.name, errors: err.errors },
+                    },
+                }
+            }
+
+            return {
+                ok: false,
+                error: {
+                    code: 'UNKNOWN',
+                    message: err?.message ?? 'Error listing universes from database',
+                    meta: { name: err?.name, stack: err?.stack },
+                },
+            }
         }
     }
 
