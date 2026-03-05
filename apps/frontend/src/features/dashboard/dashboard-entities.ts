@@ -64,6 +64,7 @@ const dashboardEntityMetaByModel: Record<DomainModelKey, DashboardEntityMeta> = 
     plural: 'Universes',
     icon: Globe,
     color: 'bg-amber-500',
+    to: '/universes',
   },
   location: {
     singular: 'Location',

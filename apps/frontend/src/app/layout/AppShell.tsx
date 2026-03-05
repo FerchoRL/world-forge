@@ -20,7 +20,7 @@ const navItems = [
   { label: 'Characters', icon: Users, to: '/characters' },
   { label: 'Character Variants', icon: UserRound, to: undefined },
   { label: 'Stories', icon: BookOpen, to: undefined },
-  { label: 'Universes', icon: Globe, to: undefined },
+  { label: 'Universes', icon: Globe, to: '/universes' },
   { label: 'Locations', icon: MapPin, to: undefined },
   { label: 'Arcs', icon: GitBranch, to: undefined },
   { label: 'Healthcheck', icon: HeartPulse, to: '/health' },
