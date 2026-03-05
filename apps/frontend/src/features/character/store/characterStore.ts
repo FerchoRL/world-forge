@@ -1,7 +1,17 @@
 import { create } from 'zustand'
 import { characterService } from '@/app/services/characterService'
 import type { CharacterListItem, StatusFilter } from '@/features/character/types'
-import { filterCharacters } from './character.selectors'
+
+let listAbortController: AbortController | null = null
+// Identifica el último request disparado para ignorar respuestas viejas.
+let activeListRequestId = 0
+
+function isAbortError(error: unknown): boolean {
+  return (
+    error instanceof DOMException &&
+    error.name === 'AbortError'
+  )
+}
 
 interface CharacterState {
   // ======================
@@ -41,11 +51,6 @@ interface CharacterState {
   // UI actions
   setSearchTerm: (term: string) => void
   setStatusFilter: (status: StatusFilter) => void
-
-  // ======================
-  // Derived
-  // ======================
-  filteredCharacters: () => CharacterListItem[]
 }
 
 export const useCharacterStore = create<CharacterState>((set, get) => ({
@@ -81,11 +86,29 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
   // Actions
   // ======================
   fetchInitialCharacters: async () => {
+    // Cancela el request anterior cuando cambia búsqueda/filtro.
+    listAbortController?.abort()
+    listAbortController = new AbortController()
+    const requestId = ++activeListRequestId
+
     set({ charactersLoading: true, charactersError: null })
 
     try {
-      const { limit } = get()
-      const response = await characterService.getAll({ page: 1, limit })
+      const { limit, searchTerm, statusFilter } = get()
+      const response = await characterService.getAll({
+        page: 1,
+        limit,
+        search: searchTerm,
+        status: statusFilter !== 'ALL' ? statusFilter : undefined,
+      }, {
+        signal: listAbortController.signal,
+      })
+
+      // Si llegó una respuesta vieja, no toca el estado.
+      if (requestId !== activeListRequestId) {
+        return
+      }
+
       set({
         characters: response.characters,
         total: response.total,
@@ -93,10 +116,22 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
         hasMore: response.characters.length < response.total,
       })
     } catch (error) {
+      // Abort no es error funcional, solo un reemplazo de request.
+      if (isAbortError(error)) {
+        return
+      }
+
+      if (requestId !== activeListRequestId) {
+        return
+      }
+
       console.error(error)
       set({ charactersError: 'Failed to load characters' })
     } finally {
-      set({ charactersLoading: false })
+      if (requestId === activeListRequestId) {
+        set({ charactersLoading: false })
+        listAbortController = null
+      }
     }
   },
 
@@ -110,10 +145,13 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
 
     try {
       const nextPage = page + 1
+      const { searchTerm, statusFilter } = get()
 
       const response = await characterService.getAll({
         page: nextPage,
         limit,
+        search: searchTerm,
+        status: statusFilter !== 'ALL' ? statusFilter : undefined,
       })
 
       set({
@@ -160,13 +198,5 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
 
   setStatusFilter: (status: StatusFilter) => {
     set({ statusFilter: status })
-  },
-
-  // ======================
-  // Derived
-  // ======================
-  filteredCharacters: () => {
-    const { characters, searchTerm, statusFilter } = get()
-    return filterCharacters(characters, searchTerm, statusFilter)
   },
 }))

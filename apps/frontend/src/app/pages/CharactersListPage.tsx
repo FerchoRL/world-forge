@@ -22,7 +22,7 @@ export function CharactersListPage() {
   const navigate = useNavigate()
 
   // Store state
-  const filteredCharacters = useCharacterStore((s) => s.filteredCharacters)
+  const characters = useCharacterStore((s) => s.characters)
   const charactersLoading = useCharacterStore((s) => s.charactersLoading)
   const error = useCharacterStore((s) => s.charactersError)
 
@@ -38,27 +38,20 @@ export function CharactersListPage() {
   const setSearchTerm = useCharacterStore((s) => s.setSearchTerm)
   const setStatusFilter = useCharacterStore((s) => s.setStatusFilter)
 
-  // Ejecutamos el selector DERIVADO fuera del hook
-  const characters = filteredCharacters()
-
   // ======================
   // Effects
   // ======================
   useEffect(() => {
-    fetchInitialCharacters()
-  }, [fetchInitialCharacters])
+    const timeoutId = setTimeout(() => {
+      fetchInitialCharacters()
+    }, 300)
+
+    return () => clearTimeout(timeoutId)
+  }, [fetchInitialCharacters, searchTerm, statusFilter])
 
   // ======================
   // States
   // ======================
-  if (charactersLoading) {
-    return <div className="p-8">Loading characters…</div>
-  }
-
-  if (error) {
-    return <div className="p-8 text-red-500">{error}</div>
-  }
-
   return (
     <div className="p-8 space-y-6">
       {/* ======================
@@ -113,6 +106,12 @@ export function CharactersListPage() {
       {/* ======================
           Table
          ====================== */}
+      {error && (
+        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       <div className="bg-white border border-zinc-200 rounded-lg overflow-x-auto">
         <Table className="table-fixed min-w-290">
           <TableHeader>
@@ -127,6 +126,17 @@ export function CharactersListPage() {
           </TableHeader>
 
           <TableBody>
+            {charactersLoading && characters.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={6}
+                  className="text-center text-zinc-500 py-8"
+                >
+                  Loading characters…
+                </TableCell>
+              </TableRow>
+            )}
+
             {characters.map((character: CharacterListItem) => (
               <TableRow key={character.id}>
                 {/* Name */}
@@ -203,7 +213,7 @@ export function CharactersListPage() {
             ))}
 
             {/* Empty state */}
-            {characters.length === 0 && (
+            {!charactersLoading && characters.length === 0 && (
               <TableRow>
                 <TableCell
                   colSpan={6}

@@ -1,4 +1,10 @@
-import { Character, CharacterRepository, CreateCharacterInput, UpdateCharacterCoreInput } from '@world-forge/domain'
+import {
+    Character,
+    CharacterRepository,
+    CreateCharacterInput,
+    UpdateCharacterCoreInput,
+    ListCharactersParams,
+} from '@world-forge/domain'
 import { RepoResult } from '@world-forge/domain'
 import { CharacterId } from '@world-forge/domain'
 
@@ -51,19 +57,35 @@ export class MongoCharacterRepository implements CharacterRepository {
     }
 
     // Lista characters de forma paginada
-    async list(
-        page: number,
-        limit: number
-    ): Promise<RepoResult<{ items: Character[]; total: number }>> {
+    async list(params: ListCharactersParams): Promise<RepoResult<{ items: Character[]; total: number }>> {
         try {
+            const { page, limit, search, status } = params
             const skip = (page - 1) * limit
 
+            const filter: Record<string, unknown> = {}
+
+            if (status) {
+                filter.status = status
+            }
+
+            if (search) {
+                const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                const regex = new RegExp(escaped, 'i')
+
+                filter.$or = [
+                    { name: regex },
+                    { identity: regex },
+                    { inspirations: regex },
+                    { categories: regex },
+                ]
+            }
+
             const [docs, total] = await Promise.all([
-                CharacterModel.find()
+                CharacterModel.find(filter)
                     .skip(skip)
                     .limit(limit)
                     .lean(),
-                CharacterModel.countDocuments(),
+                CharacterModel.countDocuments(filter),
             ])
 
             return {

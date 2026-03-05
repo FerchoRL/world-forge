@@ -37,9 +37,21 @@ export class CharacterController {
         const limit =
             req.query.limit !== undefined ? Number(req.query.limit) : undefined
 
+        const search =
+            typeof req.query.search === 'string'
+                ? req.query.search
+                : undefined
+
+        const status =
+            typeof req.query.status === 'string'
+                ? req.query.status
+                : undefined
+
         const result = await this.listCharactersService.execute({
             page,
             limit,
+            search,
+            status,
         })
 
         res.status(200).json(result)

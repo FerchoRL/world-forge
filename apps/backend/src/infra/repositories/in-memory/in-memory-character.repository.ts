@@ -3,7 +3,8 @@ import {
     CharacterId,
     CreateCharacterInput,
     CharacterRepository,
-    UpdateCharacterCoreInput
+    UpdateCharacterCoreInput,
+    ListCharactersParams,
 } from '@world-forge/domain'
 
 import { RepoResult } from '@world-forge/domain'
@@ -26,14 +27,36 @@ export class InMemoryCharacterRepository implements CharacterRepository {
     }
 
     //Listar todos los personajes
-    async list(
-        page: number,
-        limit: number
-    ): Promise<RepoResult<{ items: Character[]; total: number }>> {
-        const characters = Array.from(this.store.values())
-        const total = characters.length
+    async list(params: ListCharactersParams): Promise<RepoResult<{ items: Character[]; total: number }>> {
+        const { page, limit, search, status } = params
+        const normalizedSearch = search?.toLowerCase().trim()
+
+        const filteredCharacters = Array.from(this.store.values()).filter((character) => {
+            const statusMatch = status ? character.status === status : true
+
+            if (!statusMatch) {
+                return false
+            }
+
+            if (!normalizedSearch) {
+                return true
+            }
+
+            const matchesName = character.name.toLowerCase().includes(normalizedSearch)
+            const matchesIdentity = character.identity.toLowerCase().includes(normalizedSearch)
+            const matchesInspirations = character.inspirations.some((inspiration) =>
+                inspiration.toLowerCase().includes(normalizedSearch)
+            )
+            const matchesCategories = character.categories.some((category) =>
+                category.toLowerCase().includes(normalizedSearch)
+            )
+
+            return matchesName || matchesIdentity || matchesInspirations || matchesCategories
+        })
+
+        const total = filteredCharacters.length
         const start = (page - 1) * limit
-        const items = characters.slice(start, start + limit)
+        const items = filteredCharacters.slice(start, start + limit)
 
         return {
             ok: true,

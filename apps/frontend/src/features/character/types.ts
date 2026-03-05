@@ -32,6 +32,16 @@ export interface CharacterApiDTO {
 // Respuesta al listar personajes
 export interface ListCharactersApiResponse {
   characters: CharacterApiDTO[]
+  page: number
+  limit: number
+  total: number
+}
+
+export interface ListCharactersQuery {
+  page?: number
+  limit?: number
+  search?: string
+  status?: Status
 }
 
 // Respuesta al obtener un personaje por su ID

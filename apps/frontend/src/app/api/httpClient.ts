@@ -19,6 +19,8 @@ interface RequestOptions {
   method: HttpMethod
   body?: unknown
   headers?: HeadersInit
+  // Permite cancelar requests en curso (búsquedas, navegación rápida, etc.).
+  signal?: AbortSignal
 }
 
 /**
@@ -46,6 +48,7 @@ async function request<T>(path: string, options: RequestOptions): Promise<T> {
       ...options.headers,
     },
     body: options.body ? JSON.stringify(options.body) : undefined,
+    signal: options.signal,
   })
 
   if (!response.ok) {
@@ -66,8 +69,8 @@ async function request<T>(path: string, options: RequestOptions): Promise<T> {
  * Infraestructura pura
  */
 export const httpClient = {
-  get<T>(path: string) {
-    return request<T>(path, { method: 'GET' })
+  get<T>(path: string, options?: { signal?: AbortSignal }) {
+    return request<T>(path, { method: 'GET', signal: options?.signal })
   },
 
   post<T>(path: string, body: unknown) {

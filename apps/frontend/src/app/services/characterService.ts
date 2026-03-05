@@ -3,6 +3,7 @@ import { httpClient } from '@/app/api/httpClient'
 import type {
     CharacterApiDTO,
     ListCharactersApiResponse,
+    ListCharactersQuery,
     CharacterListItem,
     GetCharacterByIdApiResponse,
     PaginatedCharactersResponse,
@@ -17,17 +18,34 @@ import type {
 export const characterService = {
 
     // Obtener todos los personajes
-    async getAll(params: { page?: number, limit?: number }): Promise<PaginatedCharactersResponse> {
-        const query = new URLSearchParams({
-            page: String(params.page),
-            limit: String(params.limit),
-        })
+    // options.signal permite abortar búsquedas anteriores desde el store.
+    async getAll(
+        params: ListCharactersQuery,
+        options?: { signal?: AbortSignal }
+    ): Promise<PaginatedCharactersResponse> {
+        const query = new URLSearchParams()
+
+        if (params.page !== undefined) {
+            query.set('page', String(params.page))
+        }
+
+        if (params.limit !== undefined) {
+            query.set('limit', String(params.limit))
+        }
+
+        if (params.search && params.search.trim().length > 0) {
+            query.set('search', params.search.trim())
+        }
+
+        if (params.status) {
+            query.set('status', params.status)
+        }
+
         const response =
-            await httpClient.get<ListCharactersApiResponse & {
-                page: number
-                limit: number
-                total: number
-            }>(`/characters?${query.toString()}`)
+            await httpClient.get<ListCharactersApiResponse>(
+                `/characters?${query.toString()}`,
+                { signal: options?.signal }
+            )
 
         return {
             characters: response.characters.map((character: CharacterApiDTO) => ({
