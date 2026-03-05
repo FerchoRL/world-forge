@@ -11,13 +11,40 @@ import { UniverseModel } from '../../schemas/universe.schema'
 
 // Implementación Mongo del repositorio de Universe
 export class MongoUniverseRepository implements UniverseRepository {
-    async getById(_id: UniverseId): Promise<RepoResult<Universe | null>> {
-        return {
-            ok: false,
-            error: {
-                code: 'UNKNOWN',
-                message: 'Not implemented yet: getById',
-            },
+    async getById(id: UniverseId): Promise<RepoResult<Universe | null>> {
+        try {
+            const doc = await UniverseModel.findById(id).lean()
+
+            if (!doc) {
+                return { ok: true, data: null }
+            }
+
+            return {
+                ok: true,
+                data: UniverseMongoMapper.toDomain(doc),
+            }
+        } catch (error: unknown) {
+            const err = error as any
+
+            if (err?.name === 'ValidationError') {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'VALIDATION',
+                        message: err.message ?? 'Validation error while fetching universe by id',
+                        meta: { name: err.name, errors: err.errors },
+                    },
+                }
+            }
+
+            return {
+                ok: false,
+                error: {
+                    code: 'UNKNOWN',
+                    message: err?.message ?? 'Error fetching universe from database',
+                    meta: { name: err?.name, stack: err?.stack },
+                },
+            }
         }
     }
 
