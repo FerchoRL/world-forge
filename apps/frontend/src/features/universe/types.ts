@@ -33,10 +33,9 @@ export interface UniverseListItem {
   id: string
   name: string
   status: UniverseStatus
-  type?: string
-  stories?: number
-  characters?: number
-  updatedAt?: string
+  premise?: string
+  rules?: string[]
+  notes?: string
 }
 
 export interface PaginatedUniversesResponse {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Eye, Pencil, Plus, Search } from 'lucide-react'
 
 import { universeService } from '@/app/services/universeService'
@@ -31,6 +32,7 @@ export function UniversesListPage() {
 
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<UniverseStatusFilter>('ALL')
+  const navigate = useNavigate()
 
   useEffect(() => {
     const abortController = new AbortController()
@@ -122,15 +124,14 @@ export function UniversesListPage() {
       )}
 
       <div className="bg-white border border-zinc-200 rounded-lg overflow-x-auto">
-        <Table className="table-fixed min-w-220">
+        <Table className="table-fixed min-w-290">
           <TableHeader>
             <TableRow>
               <TableHead className="w-40">Name</TableHead>
               <TableHead className="w-30">Status</TableHead>
-              <TableHead className="w-30">Type</TableHead>
-              <TableHead className="w-20">Stories</TableHead>
-              <TableHead className="w-25">Characters</TableHead>
-              <TableHead className="w-40">Last Updated</TableHead>
+              <TableHead className="w-65">Premise</TableHead>
+              <TableHead className="w-65">Rules</TableHead>
+              <TableHead className="w-65">Notes</TableHead>
               <TableHead className="w-40 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -147,7 +148,6 @@ export function UniversesListPage() {
             {universes.map((universe) => (
               <TableRow key={universe.id}>
                 <TableCell className="w-40 truncate">{universe.name}</TableCell>
-
                 <TableCell className="w-30">
                   <Badge
                     variant="secondary"
@@ -156,12 +156,9 @@ export function UniversesListPage() {
                     {getUniverseStatusLabel(universe.status)}
                   </Badge>
                 </TableCell>
-
-                <TableCell className="w-30">{universe.type ?? '—'}</TableCell>
-                <TableCell className="w-20">{universe.stories ?? 0}</TableCell>
-                <TableCell className="w-25">{universe.characters ?? 0}</TableCell>
-                <TableCell className="w-40">{universe.updatedAt ?? '—'}</TableCell>
-
+                <TableCell className="w-65 truncate">{universe.premise ?? '—'}</TableCell>
+                <TableCell className="w-65 truncate">{Array.isArray(universe.rules) ? universe.rules.join(', ') : universe.rules ?? '—'}</TableCell>
+                <TableCell className="w-65 truncate">{universe.notes ?? '—'}</TableCell>
                 <TableCell className="w-40">
                   <div className="flex items-center justify-end gap-2 whitespace-nowrap">
                     <Button
@@ -169,6 +166,7 @@ export function UniversesListPage() {
                       size="sm"
                       className="flex items-center gap-1"
                       type="button"
+                      onClick={() => navigate(`/universes/${universe.id}`)}
                     >
                       <Eye className="w-4 h-4" />
                       View
@@ -179,6 +177,7 @@ export function UniversesListPage() {
                       size="sm"
                       className="flex items-center gap-1"
                       type="button"
+                      onClick={() => navigate(`/universes/${universe.id}/edit`)}
                     >
                       <Pencil className="w-4 h-4" />
                       Edit

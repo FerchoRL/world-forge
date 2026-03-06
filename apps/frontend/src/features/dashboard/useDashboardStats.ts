@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { characterService } from '@/app/services/characterService'
+import { universeService } from '@/app/services/universeService'
 import {
   buildDashboardEntities,
   buildQuickActions,
@@ -8,6 +9,7 @@ import {
 
 export function useDashboardStats() {
   const [characterCount, setCharacterCount] = useState(0)
+  const [universeCount, setUniverseCount] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -15,7 +17,6 @@ export function useDashboardStats() {
     const fetchCharacterCount = async () => {
       try {
         const response = await characterService.getAll({ page: 1, limit: 1 })
-
         if (!cancelled) {
           setCharacterCount(response.total)
         }
@@ -26,7 +27,21 @@ export function useDashboardStats() {
       }
     }
 
+    const fetchUniverseCount = async () => {
+      try {
+        const response = await universeService.getAll({ page: 1, limit: 1 })
+        if (!cancelled) {
+          setUniverseCount(response.total)
+        }
+      } catch {
+        if (!cancelled) {
+          setUniverseCount(0)
+        }
+      }
+    }
+
     fetchCharacterCount()
+    fetchUniverseCount()
 
     return () => {
       cancelled = true
@@ -34,8 +49,8 @@ export function useDashboardStats() {
   }, [])
 
   const dashboardEntities = useMemo(
-    () => buildDashboardEntities(characterCount),
-    [characterCount]
+    () => buildDashboardEntities(characterCount, universeCount),
+    [characterCount, universeCount]
   )
 
   const statCards = useMemo(

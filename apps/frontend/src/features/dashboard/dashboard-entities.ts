@@ -89,11 +89,16 @@ const modelOrder: DomainModelKey[] = [
   'arc',
 ]
 
-export function buildDashboardEntities(characterCount: number): DashboardEntity[] {
+export function buildDashboardEntities(characterCount: number, universeCount: number): DashboardEntity[] {
   return modelOrder.map((key) => ({
     key,
     ...dashboardEntityMetaByModel[key],
-    count: key === 'character' ? characterCount : 0,
+    count:
+      key === 'character'
+        ? characterCount
+        : key === 'universe'
+        ? universeCount
+        : 0,
   }))
 }
 
