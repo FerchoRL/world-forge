@@ -1,4 +1,6 @@
 import {
+    ListUniversesParams,
+    PaginatedUniverseResult,
     RepoResult,
     Universe,
     UniverseId,
@@ -48,13 +50,43 @@ export class MongoUniverseRepository implements UniverseRepository {
         }
     }
 
-    async list(): Promise<RepoResult<Universe[]>> {
+    async list(params: ListUniversesParams): Promise<RepoResult<PaginatedUniverseResult>> {
         try {
-            const docs = await UniverseModel.find({}).lean()
+            const { page, limit, search, status } = params
+            const skip = (page - 1) * limit
+
+            const filter: Record<string, unknown> = {}
+
+            if (status) {
+                filter.status = status
+            }
+
+            if (search) {
+                const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                const regex = new RegExp(escaped, 'i')
+
+                filter.$or = [
+                    { name: regex },
+                    { premise: regex },
+                    { notes: regex },
+                    { rules: regex },
+                ]
+            }
+
+            const [docs, total] = await Promise.all([
+                UniverseModel.find(filter)
+                    .skip(skip)
+                    .limit(limit)
+                    .lean(),
+                UniverseModel.countDocuments(filter),
+            ])
 
             return {
                 ok: true,
-                data: docs.map(UniverseMongoMapper.toDomain),
+                data: {
+                    items: docs.map(UniverseMongoMapper.toDomain),
+                    total,
+                },
             }
         } catch (error: unknown) {
             const err = error as any

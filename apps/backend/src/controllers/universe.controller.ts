@@ -1,4 +1,5 @@
 import { Request, Response } from 'express'
+import { Status } from '@world-forge/domain'
 
 import { CreateUniverseService } from '../application/services/universe/create-universe.service'
 import { GetUniverseByIdService } from '../application/services/universe/get-universe-by-id.service'
@@ -31,9 +32,21 @@ export class UniverseController {
         const limit =
             req.query.limit !== undefined ? Number(req.query.limit) : undefined
 
+        const search =
+            typeof req.query.search === 'string'
+                ? req.query.search
+                : undefined
+
+        const status =
+            typeof req.query.status === 'string'
+                ? (req.query.status as Status)
+                : undefined
+
         const result = await this.listUniversesService.execute({
             page,
             limit,
+            search,
+            status,
         })
 
         res.status(200).json(result)
