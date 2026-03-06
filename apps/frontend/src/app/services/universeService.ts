@@ -1,6 +1,7 @@
 import { httpClient } from '@/app/api/httpClient'
 import type {
   UniverseApiDTO,
+  GetUniverseByIdApiResponse,
   ListUniversesApiResponse,
   ListUniversesQuery,
   UniverseListItem,
@@ -52,5 +53,19 @@ export const universeService = {
       total: response.total,
     }
   },
-// ...existing code...
+
+  async getById(id: string): Promise<UniverseListItem> {
+    const response = await httpClient.get<GetUniverseByIdApiResponse>(
+      `/universes/${id}`
+    )
+
+    return {
+      id: response.universe.id,
+      name: response.universe.name,
+      status: response.universe.status,
+      premise: response.universe.premise,
+      rules: response.universe.rules,
+      notes: response.universe.notes,
+    }
+  },
 }

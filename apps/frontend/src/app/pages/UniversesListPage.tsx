@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye, Pencil, Plus, Search } from 'lucide-react'
 
-import { universeService } from '@/app/services/universeService'
+import { useUniverseStore } from '@/features/universe/store/universeStore'
 
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -16,64 +16,35 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
-import type {
-  UniverseListItem,
-  UniverseStatusFilter,
-} from '@/features/universe/types'
+import type { UniverseStatusFilter } from '@/features/universe/types'
 import {
   getUniverseStatusClass,
   getUniverseStatusLabel,
 } from '@/features/universe/ui/statusBadge'
 
 export function UniversesListPage() {
-  const [universes, setUniverses] = useState<UniverseListItem[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<UniverseStatusFilter>('ALL')
   const navigate = useNavigate()
 
+  const universes = useUniverseStore((s) => s.universes)
+  const universesLoading = useUniverseStore((s) => s.universesLoading)
+  const error = useUniverseStore((s) => s.universesError)
+
+  const { hasMore, fetchInitialUniverses, loadMoreUniverses } =
+    useUniverseStore()
+
+  const searchTerm = useUniverseStore((s) => s.searchTerm)
+  const statusFilter = useUniverseStore((s) => s.statusFilter)
+
+  const setSearchTerm = useUniverseStore((s) => s.setSearchTerm)
+  const setStatusFilter = useUniverseStore((s) => s.setStatusFilter)
+
   useEffect(() => {
-    const abortController = new AbortController()
-
-    setLoading(true)
-    setError(null)
-
-    const timeoutId = setTimeout(async () => {
-      try {
-        const response = await universeService.getAll(
-          {
-            page: 1,
-            limit: 10,
-            search: searchTerm,
-            status: statusFilter !== 'ALL' ? statusFilter : undefined,
-          },
-          { signal: abortController.signal }
-        )
-
-        setUniverses(response.universes)
-      } catch (requestError) {
-        if (
-          requestError instanceof DOMException &&
-          requestError.name === 'AbortError'
-        ) {
-          return
-        }
-
-        setError('Failed to load universes')
-      } finally {
-        if (!abortController.signal.aborted) {
-          setLoading(false)
-        }
-      }
+    const timeoutId = setTimeout(() => {
+      fetchInitialUniverses()
     }, 300)
 
-    return () => {
-      abortController.abort()
-      clearTimeout(timeoutId)
-    }
-  }, [searchTerm, statusFilter])
+    return () => clearTimeout(timeoutId)
+  }, [fetchInitialUniverses, searchTerm, statusFilter])
 
   return (
     <div className="p-8 space-y-6">
@@ -109,10 +80,9 @@ export function UniversesListPage() {
             }
           >
             <option value="ALL">All Statuses</option>
-            <option value="ACTIVE">Active</option>
-            <option value="IN_DEVELOPMENT">In Development</option>
-            <option value="DRAFT">Draft</option>
-            <option value="ARCHIVED">Archived</option>
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="DRAFT">DRAFT</option>
+            <option value="ARCHIVED">ARCHIVED</option>
           </select>
         </div>
       </div>
@@ -137,9 +107,9 @@ export function UniversesListPage() {
           </TableHeader>
 
           <TableBody>
-            {loading && universes.length === 0 && (
+            {universesLoading && universes.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-zinc-500 py-8">
+                <TableCell colSpan={6} className="text-center text-zinc-500 py-8">
                   Loading universes…
                 </TableCell>
               </TableRow>
@@ -187,9 +157,9 @@ export function UniversesListPage() {
               </TableRow>
             ))}
 
-            {!loading && universes.length === 0 && (
+            {!universesLoading && universes.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-zinc-500 py-8">
+                <TableCell colSpan={6} className="text-center text-zinc-500 py-8">
                   No universes found
                 </TableCell>
               </TableRow>
@@ -197,6 +167,14 @@ export function UniversesListPage() {
           </TableBody>
         </Table>
       </div>
+
+      {hasMore && (
+        <div className="flex justify-center mt-6">
+          <Button onClick={loadMoreUniverses} disabled={universesLoading}>
+            {universesLoading ? 'Loading...' : 'Load more'}
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

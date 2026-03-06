@@ -6,6 +6,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { CharactersListPage } from './pages/CharactersListPage'
 import { CharacterDetailPage } from './pages/CharacterDetailPage'
 import { UniversesListPage } from './pages/UniversesListPage'
+import { UniverseDetailPage } from './pages/UniverseDetailPage'
 import { HealthPage } from './pages/HealthPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 
@@ -20,6 +21,7 @@ export const router = createBrowserRouter([
             { path: 'characters', element: <CharactersListPage /> },
             { path: 'characters/:id', element: <CharacterDetailPage /> },
             { path: 'universes', element: <UniversesListPage /> },
+            { path: 'universes/:id', element: <UniverseDetailPage /> },
             { path: 'health', element: <HealthPage /> }
         ]
     }

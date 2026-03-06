@@ -22,6 +22,10 @@ export interface ListUniversesApiResponse {
   total: number
 }
 
+export interface GetUniverseByIdApiResponse {
+  universe: UniverseApiDTO
+}
+
 export interface ListUniversesQuery {
   page?: number
   limit?: number
