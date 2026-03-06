@@ -26,6 +26,30 @@ export interface GetUniverseByIdApiResponse {
   universe: UniverseApiDTO
 }
 
+export interface CreateUniverseRequest {
+  name: string
+  premise: string
+  rules?: string[]
+  notes?: string
+  status: UniverseStatus
+}
+
+export interface UpdateUniverseRequest {
+  name: string
+  premise: string
+  rules?: string[]
+  notes?: string
+  status: UniverseStatus
+}
+
+export interface CreateUniverseApiResponse {
+  universe: UniverseApiDTO
+}
+
+export interface UpdateUniverseApiResponse {
+  universe: UniverseApiDTO
+}
+
 export interface ListUniversesQuery {
   page?: number
   limit?: number

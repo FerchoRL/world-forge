@@ -75,10 +75,12 @@ export function UniverseDetailPage() {
           </div>
         </div>
 
-        <Button disabled className="flex items-center gap-2">
-          <Pencil className="w-4 h-4" />
-          Edit Universe
-        </Button>
+        <Link to={`/universes/${selectedUniverse.id}/edit`}>
+          <Button className="flex items-center gap-2" type="button">
+            <Pencil className="w-4 h-4" />
+            Edit Universe
+          </Button>
+        </Link>
       </div>
 
       <div className="space-y-6">

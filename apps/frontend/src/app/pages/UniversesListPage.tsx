@@ -54,7 +54,11 @@ export function UniversesListPage() {
           <p className="text-zinc-600">Manage fictional worlds and settings</p>
         </div>
 
-        <Button className="flex items-center gap-2" type="button">
+        <Button
+          className="flex items-center gap-2"
+          type="button"
+          onClick={() => navigate('/universes/new')}
+        >
           <Plus className="w-4 h-4" />
           New Universe
         </Button>
