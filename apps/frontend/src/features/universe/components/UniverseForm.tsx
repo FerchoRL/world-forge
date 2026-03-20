@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Trash2 } from 'lucide-react'
 
+import { getApiErrorMessage } from '@/app/api/httpClient'
 import { universeService } from '@/app/services/universeService'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 
 import type {
   CreateUniverseRequest,
@@ -99,7 +101,8 @@ export function UniverseForm({ mode, universe, onSubmit }: UniverseFormProps) {
   const [values, setValues] = useState<UniverseFormValues>(initialValues)
   const [newRule, setNewRule] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [validationError, setValidationError] = useState<string | null>(null)
+  const [apiError, setApiError] = useState<string | null>(null)
 
   const initialStatus = mode === 'edit' ? universe?.status : 'DRAFT'
   const allowedStatuses = useMemo(
@@ -143,13 +146,14 @@ export function UniverseForm({ mode, universe, onSubmit }: UniverseFormProps) {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setError(null)
+    setValidationError(null)
+    setApiError(null)
 
     const name = values.name.trim()
     const premise = values.premise.trim()
 
     if (!name || !premise) {
-      setError('Name and premise are required')
+      setValidationError('Name and premise are required')
       return
     }
 
@@ -162,7 +166,7 @@ export function UniverseForm({ mode, universe, onSubmit }: UniverseFormProps) {
     }
 
     if (!allowedStatuses.includes(payload.status)) {
-      setError('Selected status is not allowed in this form mode')
+      setValidationError('Selected status is not allowed in this form mode')
       return
     }
 
@@ -176,12 +180,12 @@ export function UniverseForm({ mode, universe, onSubmit }: UniverseFormProps) {
       }
 
       if (!universe?.id) {
-        setError('Universe id is required for edit mode')
+        setValidationError('Universe id is required for edit mode')
         return
       }
 
       if (!isValidStatusTransition(universe.status, payload.status)) {
-        setError('Invalid status transition for this universe')
+        setValidationError('Invalid status transition for this universe')
         return
       }
 
@@ -194,10 +198,13 @@ export function UniverseForm({ mode, universe, onSubmit }: UniverseFormProps) {
       navigate(`/universes/${updated.id}`)
     } catch (submitError) {
       console.error(submitError)
-      setError(
-        mode === 'create'
-          ? 'Failed to create universe'
-          : 'Failed to update universe'
+      setApiError(
+        getApiErrorMessage(
+          submitError,
+          mode === 'create'
+            ? 'Failed to create universe'
+            : 'Failed to update universe'
+        )
       )
     } finally {
       setSubmitting(false)
@@ -205,10 +212,23 @@ export function UniverseForm({ mode, universe, onSubmit }: UniverseFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {error && (
+    <>
+      <ConfirmationModal
+        open={Boolean(apiError)}
+        eyebrow="API Error"
+        title={mode === 'create' ? 'Universe could not be created' : 'Universe could not be updated'}
+        message={apiError ?? ''}
+        confirmLabel="Close"
+        onConfirm={() => setApiError(null)}
+        onCancel={() => setApiError(null)}
+        showCancel={false}
+        confirmVariant="default"
+      />
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+      {validationError && (
         <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
+          {validationError}
         </div>
       )}
 
@@ -244,25 +264,27 @@ export function UniverseForm({ mode, universe, onSubmit }: UniverseFormProps) {
             />
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="status" className="text-sm font-medium text-zinc-700">
-              Status
-            </label>
-            <select
-              id="status"
-              value={values.status}
-              onChange={(event) =>
-                setField('status', event.target.value as UniverseStatus)
-              }
-              className="h-10 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm"
-            >
-              {allowedStatuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-          </div>
+          {mode === 'create' && (
+            <div className="space-y-2">
+              <label htmlFor="status" className="text-sm font-medium text-zinc-700">
+                Status
+              </label>
+              <select
+                id="status"
+                value={values.status}
+                onChange={(event) =>
+                  setField('status', event.target.value as UniverseStatus)
+                }
+                className="h-10 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm"
+              >
+                {allowedStatuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -330,6 +352,7 @@ export function UniverseForm({ mode, universe, onSubmit }: UniverseFormProps) {
           {submitting ? 'Saving...' : submitLabel}
         </Button>
       </div>
-    </form>
+      </form>
+    </>
   )
 }

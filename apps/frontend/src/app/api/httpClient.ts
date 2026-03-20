@@ -10,7 +10,7 @@ if (!BASE_URL) {
 /**
  * Métodos HTTP soportados
  */
-type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE'
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
 /**
  * Opciones para una request
@@ -35,6 +35,21 @@ export class HttpError extends Error {
   }
 }
 
+export function getApiErrorMessage(
+  error: unknown,
+  fallbackMessage = 'Unexpected error occurred'
+): string {
+  if (error instanceof HttpError) {
+    return error.message
+  }
+
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message
+  }
+
+  return fallbackMessage
+}
+
 /**
  * Request genérico
  * NO conoce endpoints
@@ -52,8 +67,17 @@ async function request<T>(path: string, options: RequestOptions): Promise<T> {
   })
 
   if (!response.ok) {
-    const message = await response.text()
-    throw new HttpError(response.status, message || response.statusText)
+    const rawMessage = await response.text()
+    let message = rawMessage || response.statusText
+
+    try {
+      const parsed = JSON.parse(rawMessage) as { error?: string; message?: string }
+      message = parsed.error ?? parsed.message ?? message
+    } catch {
+      // El backend no siempre responde JSON; si no se puede parsear, se usa el texto crudo.
+    }
+
+    throw new HttpError(response.status, message)
   }
 
   // Algunos endpoints pueden no devolver body
@@ -79,6 +103,10 @@ export const httpClient = {
 
   put<T>(path: string, body: unknown) {
     return request<T>(path, { method: 'PUT', body })
+  },
+
+  patch<T>(path: string, body: unknown) {
+    return request<T>(path, { method: 'PATCH', body })
   },
 
   delete<T>(path: string) {

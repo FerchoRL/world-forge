@@ -21,7 +21,6 @@ import { getCharacterStatusClass } from '@/features/character/ui/statusBadge'
 export function CharactersListPage() {
   const navigate = useNavigate()
 
-  // Store state
   const characters = useCharacterStore((s) => s.characters)
   const charactersLoading = useCharacterStore((s) => s.charactersLoading)
   const error = useCharacterStore((s) => s.charactersError)
@@ -38,9 +37,6 @@ export function CharactersListPage() {
   const setSearchTerm = useCharacterStore((s) => s.setSearchTerm)
   const setStatusFilter = useCharacterStore((s) => s.setStatusFilter)
 
-  // ======================
-  // Effects
-  // ======================
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       fetchInitialCharacters()
@@ -49,14 +45,8 @@ export function CharactersListPage() {
     return () => clearTimeout(timeoutId)
   }, [fetchInitialCharacters, searchTerm, statusFilter])
 
-  // ======================
-  // States
-  // ======================
   return (
     <div className="p-8 space-y-6">
-      {/* ======================
-          Header
-         ====================== */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl mb-2">Characters</h1>
@@ -71,12 +61,8 @@ export function CharactersListPage() {
         </Button>
       </div>
 
-      {/* ======================
-          Filters
-         ====================== */}
       <div className="bg-white border border-zinc-200 rounded-lg p-4">
         <div className="flex gap-4">
-          {/* Search */}
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
             <Input
@@ -87,7 +73,6 @@ export function CharactersListPage() {
             />
           </div>
 
-          {/* Status filter */}
           <select
             className="px-4 py-2 border border-zinc-300 rounded-md bg-white text-sm"
             value={statusFilter}
@@ -103,9 +88,6 @@ export function CharactersListPage() {
         </div>
       </div>
 
-      {/* ======================
-          Table
-         ====================== */}
       {error && (
         <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
@@ -139,12 +121,10 @@ export function CharactersListPage() {
 
             {characters.map((character: CharacterListItem) => (
               <TableRow key={character.id}>
-                {/* Name */}
                 <TableCell className="w-40 truncate">
                   {character.name}
                 </TableCell>
 
-                {/* Status */}
                 <TableCell className="w-30">
                   <Badge
                     variant="secondary"
@@ -154,7 +134,6 @@ export function CharactersListPage() {
                   </Badge>
                 </TableCell>
 
-                {/* Categories */}
                 <TableCell className="w-50">
                   <div
                     className="truncate"
@@ -164,14 +143,12 @@ export function CharactersListPage() {
                   </div>
                 </TableCell>
 
-                {/* Identity */}
                 <TableCell className="w-65">
                   <div className="truncate" title={character.identity}>
                     {character.identity}
                   </div>
                 </TableCell>
 
-                {/* Inspirations */}
                 <TableCell className="w-65">
                   <div
                     className="truncate"
@@ -181,7 +158,6 @@ export function CharactersListPage() {
                   </div>
                 </TableCell>
 
-                {/* Actions */}
                 <TableCell className="w-40">
                   <div className="flex items-center justify-end gap-2 whitespace-nowrap">
                     <Button
@@ -212,7 +188,6 @@ export function CharactersListPage() {
               </TableRow>
             ))}
 
-            {/* Empty state */}
             {!charactersLoading && characters.length === 0 && (
               <TableRow>
                 <TableCell

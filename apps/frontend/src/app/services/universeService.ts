@@ -127,4 +127,19 @@ export const universeService = {
       notes: response.universe.notes,
     }
   },
+
+  async changeStatus(id: string, status: 'ACTIVE' | 'ARCHIVED'): Promise<UniverseListItem> {
+    const response = await httpClient.patch<UpdateUniverseApiResponse>(
+      `/universes/${id}/status`,
+      { status }
+    )
+    return {
+      id: response.universe.id,
+      name: response.universe.name,
+      status: response.universe.status,
+      premise: response.universe.premise,
+      rules: response.universe.rules,
+      notes: response.universe.notes,
+    }
+  },
 }
