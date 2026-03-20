@@ -12,24 +12,6 @@ import type {
   UpdateUniverseRequest,
 } from '@/features/universe/types'
 
-export async function updateUniverseMock(
-  universeId: string,
-  payload: UpdateUniverseRequest
-): Promise<UniverseListItem> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        id: universeId,
-        name: payload.name,
-        premise: payload.premise,
-        rules: payload.rules,
-        notes: payload.notes,
-        status: payload.status,
-      })
-    }, 450)
-  })
-}
-
 /**
  * ===== Service =====
  * Traduce backend → frontend
@@ -113,11 +95,26 @@ export const universeService = {
     id: string,
     payload: UpdateUniverseRequest
   ): Promise<UniverseListItem> {
-    const response = await httpClient.put<UpdateUniverseApiResponse>(
+    const response = await httpClient.patch<UpdateUniverseApiResponse>(
       `/universes/${id}`,
       payload
     )
 
+    return {
+      id: response.universe.id,
+      name: response.universe.name,
+      status: response.universe.status,
+      premise: response.universe.premise,
+      rules: response.universe.rules,
+      notes: response.universe.notes,
+    }
+  },
+
+  async changeStatus(id: string, status: 'ACTIVE' | 'ARCHIVED'): Promise<UniverseListItem> {
+    const response = await httpClient.patch<UpdateUniverseApiResponse>(
+      `/universes/${id}/status`,
+      { status }
+    )
     return {
       id: response.universe.id,
       name: response.universe.name,

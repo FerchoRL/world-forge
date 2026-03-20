@@ -25,7 +25,6 @@ export function CharacterDetailPage() {
         clearErrors,
     } = useCharacterStore()
 
-    // 🔹 ESTE ERA EL BLOQUE QUE FALTABA
     useEffect(() => {
         if (!id) return
 
@@ -36,7 +35,6 @@ export function CharacterDetailPage() {
         }
     }, [id, fetchCharacterById, clearErrors])
 
-    // 🔹 Estados de render (MUY importante el orden)
     if (detailLoading) {
         return <div className="p-8">Loading character…</div>
     }
@@ -53,10 +51,8 @@ export function CharacterDetailPage() {
         return <div className="p-8">Character not found</div>
     }
 
-    // 🔹 A partir de aquí, YA sabemos que hay character
     return (
         <div className="p-8">
-            {/* Back */}
             <div className="flex items-center gap-4 mb-6">
                 <Link to="/characters">
                     <Button variant="ghost" size="sm" className="flex items-center gap-2">
@@ -66,7 +62,6 @@ export function CharacterDetailPage() {
                 </Link>
             </div>
 
-            {/* Header */}
             <div className="flex items-start justify-between mb-6">
                 <div>
                     <h1 className="text-3xl mb-2">
@@ -90,7 +85,6 @@ export function CharacterDetailPage() {
             </div>
 
             <div className="space-y-6">
-                {/* Identity */}
                 <Card>
                     <CardHeader>
                         <CardTitle>Identity</CardTitle>
@@ -102,7 +96,6 @@ export function CharacterDetailPage() {
                     </CardContent>
                 </Card>
 
-                {/* Categories */}
                 <Card>
                     <CardHeader>
                         <CardTitle>Categories</CardTitle>
@@ -118,7 +111,6 @@ export function CharacterDetailPage() {
                     </CardContent>
                 </Card>
 
-                {/* Inspirations */}
                 <Card>
                     <CardHeader>
                         <CardTitle>Inspirations</CardTitle>
@@ -134,7 +126,6 @@ export function CharacterDetailPage() {
                     </CardContent>
                 </Card>
 
-                {/* Notes */}
                 <Card>
                     <CardHeader>
                         <CardTitle>Notes</CardTitle>
@@ -146,7 +137,6 @@ export function CharacterDetailPage() {
                     </CardContent>
                 </Card>
 
-                {/* Image Reference */}
                 <Card>
                     <CardHeader>
                         <CardTitle>Image Reference</CardTitle>

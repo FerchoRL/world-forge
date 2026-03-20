@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 
+import { getApiErrorMessage } from '@/app/api/httpClient'
 import { universeService } from '@/app/services/universeService'
 import type {
   UniverseListItem,
@@ -126,7 +127,9 @@ export const useUniverseStore = create<UniverseState>((set, get) => ({
       }
 
       console.error(error)
-      set({ universesError: 'Failed to load universes' })
+      set({
+        universesError: getApiErrorMessage(error, 'Failed to load universes'),
+      })
     } finally {
       if (requestId === activeListRequestId) {
         set({ universesLoading: false })
@@ -161,7 +164,9 @@ export const useUniverseStore = create<UniverseState>((set, get) => ({
       })
     } catch (error) {
       console.error(error)
-      set({ universesError: 'Failed to load more universes' })
+      set({
+        universesError: getApiErrorMessage(error, 'Failed to load more universes'),
+      })
     } finally {
       set({ universesLoading: false })
     }
@@ -175,7 +180,9 @@ export const useUniverseStore = create<UniverseState>((set, get) => ({
       set({ selectedUniverse: universe })
     } catch (error) {
       console.error(error)
-      set({ detailError: 'Failed to load universe detail' })
+      set({
+        detailError: getApiErrorMessage(error, 'Failed to load universe detail'),
+      })
     } finally {
       set({ detailLoading: false })
     }

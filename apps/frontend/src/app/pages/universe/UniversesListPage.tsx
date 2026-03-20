@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye, Pencil, Plus, Search } from 'lucide-react'
 
@@ -21,6 +21,7 @@ import {
   getUniverseStatusClass,
   getUniverseStatusLabel,
 } from '@/features/universe/ui/statusBadge'
+import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 
 export function UniversesListPage() {
   const navigate = useNavigate()
@@ -31,12 +32,15 @@ export function UniversesListPage() {
 
   const { hasMore, fetchInitialUniverses, loadMoreUniverses } =
     useUniverseStore()
+  const clearErrors = useUniverseStore((s) => s.clearErrors)
 
   const searchTerm = useUniverseStore((s) => s.searchTerm)
   const statusFilter = useUniverseStore((s) => s.statusFilter)
 
   const setSearchTerm = useUniverseStore((s) => s.setSearchTerm)
   const setStatusFilter = useUniverseStore((s) => s.setStatusFilter)
+  const [showApiError, setShowApiError] = useState(false)
+  const [actionErrorMessage, setActionErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -46,8 +50,53 @@ export function UniversesListPage() {
     return () => clearTimeout(timeoutId)
   }, [fetchInitialUniverses, searchTerm, statusFilter])
 
+  useEffect(() => {
+    if (error) {
+      setShowApiError(true)
+    }
+  }, [error])
+
+  function handleCloseApiError() {
+    setShowApiError(false)
+    clearErrors()
+  }
+
+  function handleEditUniverse(universeId: string, status: string) {
+    if (status === 'ARCHIVED') {
+      setActionErrorMessage('Archived universes cannot be edited. Reactivate it first or duplicate it to continue working.')
+      return
+    }
+
+    navigate(`/universes/${universeId}/edit`)
+  }
+
   return (
-    <div className="p-8 space-y-6">
+    <>
+      <ConfirmationModal
+        open={showApiError}
+        eyebrow="API Error"
+        title="Universes could not be loaded"
+        message={error ?? ''}
+        confirmLabel="Close"
+        onConfirm={handleCloseApiError}
+        onCancel={handleCloseApiError}
+        showCancel={false}
+        confirmVariant="default"
+      />
+
+      <ConfirmationModal
+        open={Boolean(actionErrorMessage)}
+        eyebrow="Action Not Available"
+        title="Universe cannot be edited"
+        message={actionErrorMessage ?? ''}
+        confirmLabel="Close"
+        onConfirm={() => setActionErrorMessage(null)}
+        onCancel={() => setActionErrorMessage(null)}
+        showCancel={false}
+        confirmVariant="default"
+      />
+
+      <div className="p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl mb-2">Universes</h1>
@@ -90,12 +139,6 @@ export function UniversesListPage() {
           </select>
         </div>
       </div>
-
-      {error && (
-        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
 
       <div className="bg-white border border-zinc-200 rounded-lg overflow-x-auto">
         <Table className="table-fixed min-w-290">
@@ -151,7 +194,8 @@ export function UniversesListPage() {
                       size="sm"
                       className="flex items-center gap-1"
                       type="button"
-                      onClick={() => navigate(`/universes/${universe.id}/edit`)}
+                      onClick={() => handleEditUniverse(universe.id, universe.status)}
+                      disabled={universe.status === 'ARCHIVED'}
                     >
                       <Pencil className="w-4 h-4" />
                       Edit
@@ -179,6 +223,7 @@ export function UniversesListPage() {
           </Button>
         </div>
       )}
-    </div>
+      </div>
+    </>
   )
 }
