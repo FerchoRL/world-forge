@@ -9,14 +9,22 @@ export interface UniverseCoreInput {
 
 // Valida nombre base del universo
 export function validateUniverseName(name: unknown): void {
-    if (typeof name !== 'string' || name.trim() === '') {
+    if (typeof name !== 'string') {
+        throw new ValidationError('Universe name must be a string')
+    }
+
+    if (name.trim() === '') {
         throw new ValidationError('Universe name is required')
     }
 }
 
 // Valida premisa central del mundo
 export function validateUniversePremise(premise: unknown): void {
-    if (typeof premise !== 'string' || premise.trim() === '') {
+    if (typeof premise !== 'string') {
+        throw new ValidationError('Universe premise must be a string')
+    }
+
+    if (premise.trim() === '') {
         throw new ValidationError('Universe premise is required')
     }
 }

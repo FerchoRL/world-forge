@@ -1,4 +1,4 @@
-import { Status, Universe } from '@world-forge/domain'
+import { CreateUniverseInput, Status, Universe } from '@world-forge/domain'
 
 type UniverseDocument = {
     _id: string
@@ -11,7 +11,7 @@ type UniverseDocument = {
 
 // Mapper de infraestructura para Universe (dominio <-> persistencia)
 export class UniverseMongoMapper {
-    static toPersistence(universe: Universe): UniverseDocument {
+    static toPersistence(universe: Universe | CreateUniverseInput): UniverseDocument {
         return {
             _id: universe.id,
             name: universe.name,

@@ -1,4 +1,4 @@
-import { Universe, UniverseId, UniverseUpdatePatch } from '@world-forge/domain'
+import { Universe, UniverseId, UpdateUniverseCoreInput } from '@world-forge/domain'
 
 import { CreateUniverseRequest } from '../dtos/universe/create-universe.request'
 import { UpdateUniverseRequest } from '../dtos/universe/update-universe.request'
@@ -25,7 +25,7 @@ export class UniverseMapper {
         }
     }
 
-    static toUpdatePatch(input: UpdateUniverseRequest): UniverseUpdatePatch {
+    static toUpdatePatch(input: UpdateUniverseRequest): UpdateUniverseCoreInput {
         return {
             name: input.name,
             premise: input.premise,

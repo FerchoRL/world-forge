@@ -1,11 +1,12 @@
 import {
+    CreateUniverseInput,
     ListUniversesParams,
     PaginatedUniverseResult,
     RepoResult,
     Universe,
     UniverseId,
     UniverseRepository,
-    UniverseUpdatePatch,
+    UpdateUniverseCoreInput,
 } from '@world-forge/domain'
 
 import { UniverseMongoMapper } from '../../mappers/universe.mongo-mapper'
@@ -113,7 +114,7 @@ export class MongoUniverseRepository implements UniverseRepository {
         }
     }
 
-    async create(input: Universe): Promise<RepoResult<Universe>> {
+    async create(input: CreateUniverseInput): Promise<RepoResult<Universe>> {
         try {
             const doc = UniverseMongoMapper.toPersistence(input)
             await UniverseModel.create(doc)
@@ -158,23 +159,144 @@ export class MongoUniverseRepository implements UniverseRepository {
         }
     }
 
-    async update(_id: UniverseId, _patch: UniverseUpdatePatch): Promise<RepoResult<Universe>> {
-        return {
-            ok: false,
-            error: {
-                code: 'UNKNOWN',
-                message: 'Not implemented yet: update',
-            },
+    async updateCore(
+        id: UniverseId,
+        patch: UpdateUniverseCoreInput
+    ): Promise<RepoResult<Universe>> {
+        try {
+            const updateDoc = {
+                ...patch,
+            }
+
+            const updateResult = await UniverseModel.updateOne(
+                { _id: id },
+                { $set: updateDoc }
+            )
+
+            if (updateResult.matchedCount === 0) {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'NOT_FOUND',
+                        message: 'Universe not found',
+                    },
+                }
+            }
+
+            const updatedDoc = await UniverseModel.findById(id).lean()
+
+            if (!updatedDoc) {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'NOT_FOUND',
+                        message: 'Universe not found after update',
+                    },
+                }
+            }
+
+            return {
+                ok: true,
+                data: UniverseMongoMapper.toDomain(updatedDoc),
+            }
+        } catch (error: unknown) {
+            const err = error as any
+
+            if (err?.code === 11000) {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'CONFLICT',
+                        message: 'Universe name already exists for an ACTIVE or DRAFT universe',
+                        meta: { mongoCode: err.code, keyValue: err.keyValue },
+                    },
+                }
+            }
+
+            if (err?.name === 'ValidationError') {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'VALIDATION',
+                        message: err.message ?? 'Validation error while updating universe',
+                        meta: { name: err.name, errors: err.errors },
+                    },
+                }
+            }
+
+            return {
+                ok: false,
+                error: {
+                    code: 'UNKNOWN',
+                    message: err?.message ?? 'Error updating universe in database',
+                    meta: { name: err?.name, stack: err?.stack },
+                },
+            }
         }
     }
 
-    async archive(_id: UniverseId): Promise<RepoResult<void>> {
-        return {
-            ok: false,
-            error: {
-                code: 'UNKNOWN',
-                message: 'Not implemented yet: archive',
-            },
+    async changeStatus(
+        id: UniverseId,
+        status: 'ACTIVE' | 'ARCHIVED'
+    ): Promise<RepoResult<Universe>> {
+        try {
+            const updatedDoc = await UniverseModel.findOneAndUpdate(
+                { _id: id },
+                { $set: { status } },
+                {
+                    new: true,
+                    runValidators: true,
+                    lean: true,
+                }
+            )
+
+            if (!updatedDoc) {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'NOT_FOUND',
+                        message: 'Universe not found',
+                    },
+                }
+            }
+
+            return {
+                ok: true,
+                data: UniverseMongoMapper.toDomain(updatedDoc),
+            }
+        } catch (error: unknown) {
+            const err = error as any
+
+            if (err?.code === 11000) {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'CONFLICT',
+                        message: 'Universe name already exists for an ACTIVE or DRAFT universe',
+                        meta: { mongoCode: err.code, keyValue: err.keyValue },
+                    },
+                }
+            }
+
+            if (err?.name === 'ValidationError') {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'VALIDATION',
+                        message: err.message ?? 'Validation error while changing universe status',
+                        meta: { name: err.name, errors: err.errors },
+                    },
+                }
+            }
+
+            return {
+                ok: false,
+                error: {
+                    code: 'UNKNOWN',
+                    message: err?.message ?? 'Error changing universe status in database',
+                    meta: { name: err?.name, stack: err?.stack },
+                },
+            }
         }
     }
 }

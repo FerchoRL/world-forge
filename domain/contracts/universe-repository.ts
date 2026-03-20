@@ -2,7 +2,21 @@ import { Universe } from '../models'
 import { Status, UniverseId } from '../types'
 import { RepoResult } from './repo-errors'
 
-export type UniverseUpdatePatch = Partial<Pick<Universe, 'name' | 'premise' | 'rules' | 'notes'>>
+export interface CreateUniverseInput {
+    id: UniverseId
+    name: string
+    premise: string
+    rules?: string[]
+    notes?: string
+    status: 'DRAFT' | 'ACTIVE'
+}
+
+export interface UpdateUniverseCoreInput {
+    name?: string
+    premise?: string
+    rules?: string[]
+    notes?: string
+}
 
 export interface ListUniversesParams {
     page: number
@@ -20,8 +34,7 @@ export interface UniverseRepository {
     getById(id: UniverseId): Promise<RepoResult<Universe | null>>
     list(params: ListUniversesParams): Promise<RepoResult<PaginatedUniverseResult>>
 
-    create(input: Universe): Promise<RepoResult<Universe>>
-    update(id: UniverseId, patch: UniverseUpdatePatch): Promise<RepoResult<Universe>>
-
-    archive(id: UniverseId): Promise<RepoResult<void>>
+    create(input: CreateUniverseInput): Promise<RepoResult<Universe>>
+    updateCore(id: UniverseId, patch: UpdateUniverseCoreInput): Promise<RepoResult<Universe>>
+    changeStatus(id: UniverseId, status: 'ACTIVE' | 'ARCHIVED'): Promise<RepoResult<Universe>>
 }

@@ -4,12 +4,16 @@ import { Status } from '@world-forge/domain'
 import { CreateUniverseService } from '../application/services/universe/create-universe.service'
 import { GetUniverseByIdService } from '../application/services/universe/get-universe-by-id.service'
 import { ListUniversesService } from '../application/services/universe/list-universes.service'
+import { UpdateUniverseService } from '../application/services/universe/update-universe.service'
+import { ChangeUniverseStatusService } from '../application/services/universe/change-universe-status.service'
 
 export class UniverseController {
     constructor(
         private readonly createUniverseService: CreateUniverseService,
         private readonly getUniverseByIdService: GetUniverseByIdService,
-        private readonly listUniversesService: ListUniversesService
+        private readonly listUniversesService: ListUniversesService,
+        private readonly updateUniverseService: UpdateUniverseService,
+        private readonly changeUniverseStatusService: ChangeUniverseStatusService
     ) { }
 
     // Crea un universe nuevo
@@ -48,6 +52,26 @@ export class UniverseController {
             search,
             status,
         })
+
+        res.status(200).json(result)
+    }
+
+    // Actualiza campos editables del núcleo conceptual
+    async update(req: Request, res: Response): Promise<void> {
+        const result = await this.updateUniverseService.execute(
+            req.params.id as string,
+            req.body
+        )
+
+        res.status(200).json(result)
+    }
+
+    // Cambia status aplicando reglas de transición del dominio
+    async changeStatus(req: Request, res: Response): Promise<void> {
+        const result = await this.changeUniverseStatusService.execute(
+            req.params.id as string,
+            req.body?.status
+        )
 
         res.status(200).json(result)
     }
