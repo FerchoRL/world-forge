@@ -21,6 +21,7 @@ interface UniverseFormProps {
   mode: 'create' | 'edit'
   universe?: UniverseListItem
   onSubmit?: (payload: UpdateUniverseRequest) => Promise<void>
+  onCancel?: () => void
 }
 
 interface UniverseFormValues {
@@ -54,43 +55,7 @@ function getInitialValues(
   }
 }
 
-function getAllowedStatuses(
-  mode: UniverseFormProps['mode'],
-  initialStatus?: UniverseStatus
-): UniverseStatus[] {
-  if (mode === 'create') {
-    return ['DRAFT', 'ACTIVE']
-  }
-
-  if (initialStatus === 'DRAFT') {
-    return ['DRAFT', 'ACTIVE']
-  }
-
-  if (initialStatus === 'ACTIVE') {
-    return ['ACTIVE', 'ARCHIVED']
-  }
-
-  if (initialStatus === 'ARCHIVED') {
-    return ['ARCHIVED', 'ACTIVE']
-  }
-
-  return ['ACTIVE']
-}
-
-function isValidStatusTransition(
-  from: UniverseStatus,
-  to: UniverseStatus
-): boolean {
-  if (from === to) return true
-
-  if (from === 'DRAFT' && to === 'ACTIVE') return true
-  if (from === 'ACTIVE' && to === 'ARCHIVED') return true
-  if (from === 'ARCHIVED' && to === 'ACTIVE') return true
-
-  return false
-}
-
-export function UniverseForm({ mode, universe, onSubmit }: UniverseFormProps) {
+export function UniverseForm({ mode, universe, onSubmit, onCancel }: UniverseFormProps) {
   const navigate = useNavigate()
 
   const initialValues = useMemo(
@@ -104,11 +69,7 @@ export function UniverseForm({ mode, universe, onSubmit }: UniverseFormProps) {
   const [validationError, setValidationError] = useState<string | null>(null)
   const [apiError, setApiError] = useState<string | null>(null)
 
-  const initialStatus = mode === 'edit' ? universe?.status : 'DRAFT'
-  const allowedStatuses = useMemo(
-    () => getAllowedStatuses(mode, initialStatus),
-    [mode, initialStatus]
-  )
+  const allowedStatuses: UniverseStatus[] = ['DRAFT', 'ACTIVE']
 
   const submitLabel = mode === 'create' ? 'Create Universe' : 'Save Changes'
 
@@ -157,23 +118,23 @@ export function UniverseForm({ mode, universe, onSubmit }: UniverseFormProps) {
       return
     }
 
-    const payload: CreateUniverseRequest = {
-      name,
-      premise,
-      rules: values.rules.length > 0 ? values.rules : undefined,
-      notes: values.notes.trim() ? values.notes.trim() : undefined,
-      status: values.status,
-    }
-
-    if (!allowedStatuses.includes(payload.status)) {
-      setValidationError('Selected status is not allowed in this form mode')
-      return
-    }
-
     setSubmitting(true)
 
     try {
       if (mode === 'create') {
+        const payload: CreateUniverseRequest = {
+          name,
+          premise,
+          rules: values.rules.length > 0 ? values.rules : undefined,
+          notes: values.notes.trim() ? values.notes.trim() : undefined,
+          status: values.status,
+        }
+
+        if (!allowedStatuses.includes(payload.status)) {
+          setValidationError('Selected status is not allowed in this form mode')
+          return
+        }
+
         const created = await universeService.createUniverse(payload)
         navigate(`/universes/${created.id}`)
         return
@@ -184,9 +145,11 @@ export function UniverseForm({ mode, universe, onSubmit }: UniverseFormProps) {
         return
       }
 
-      if (!isValidStatusTransition(universe.status, payload.status)) {
-        setValidationError('Invalid status transition for this universe')
-        return
+      const payload: UpdateUniverseRequest = {
+        name,
+        premise,
+        rules: values.rules.length > 0 ? values.rules : undefined,
+        notes: values.notes.trim() ? values.notes.trim() : undefined,
       }
 
       if (onSubmit) {
@@ -347,7 +310,12 @@ export function UniverseForm({ mode, universe, onSubmit }: UniverseFormProps) {
         </CardContent>
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-3">
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>
+            Cancel
+          </Button>
+        )}
         <Button type="submit" disabled={submitting}>
           {submitting ? 'Saving...' : submitLabel}
         </Button>

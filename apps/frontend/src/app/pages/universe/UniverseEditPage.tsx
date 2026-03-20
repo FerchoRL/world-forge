@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 
-import { updateUniverseMock } from '@/app/services/universeService'
+import { universeService } from '@/app/services/universeService'
 import { useUniverseStore } from '@/features/universe/store/universeStore'
 import { UniverseForm } from '@/features/universe/components/UniverseForm'
 import {
@@ -71,8 +71,14 @@ export function UniverseEditPage() {
       throw new Error('Universe id is required')
     }
 
-    const updated = await updateUniverseMock(id, payload)
-    navigate(`/universes/${updated.id}`)
+    const updated = await universeService.updateUniverse(id, payload)
+    navigate(`/universes/${updated.id}`, {
+      state: {
+        successMessage: 'Universe updated successfully',
+        successDescription:
+          'The core universe details were saved and are now reflected in this universe.',
+      },
+    })
   }
 
   if (detailLoading) {
@@ -160,6 +166,7 @@ export function UniverseEditPage() {
           mode="edit"
           universe={selectedUniverse}
           onSubmit={handleUpdateUniverse}
+          onCancel={() => navigate(`/universes/${selectedUniverse.id}`)}
         />
       </div>
       )}

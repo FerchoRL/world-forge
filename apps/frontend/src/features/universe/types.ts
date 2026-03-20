@@ -35,11 +35,10 @@ export interface CreateUniverseRequest {
 }
 
 export interface UpdateUniverseRequest {
-  name: string
-  premise: string
+  name?: string
+  premise?: string
   rules?: string[]
   notes?: string
-  status: UniverseStatus
 }
 
 export interface CreateUniverseApiResponse {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Pencil } from 'lucide-react'
 
 import { universeService } from '@/app/services/universeService'
@@ -21,9 +21,16 @@ import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 import { SuccessModal } from '@/components/ui/SuccessModal'
 import { HttpError } from '@/app/api/httpClient'
 
+interface DetailPageNavigationState {
+  successMessage?: string
+  successDescription?: string
+}
+
 export function UniverseDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const location = useLocation()
   const navigate = useNavigate()
+  const navigationState = (location.state as DetailPageNavigationState | null) ?? null
   const {
     selectedUniverse,
     detailLoading,
@@ -36,13 +43,18 @@ export function UniverseDetailPage() {
   const [archiving, setArchiving] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
   const [reactivating, setReactivating] = useState(false)
-  const [showSuccess, setShowSuccess] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(Boolean(navigationState?.successMessage))
   const [showDuplicateConfirmation, setShowDuplicateConfirmation] = useState(false)
   const [showAlert, setShowAlert] = useState(false)
   const [alertTitle, setAlertTitle] = useState('')
   const [alertMessage, setAlertMessage] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
-  const [successDescription, setSuccessDescription] = useState('')
+  const [successMessage, setSuccessMessage] = useState(navigationState?.successMessage ?? '')
+  const [successDescription, setSuccessDescription] = useState(navigationState?.successDescription ?? '')
+
+  function handleCloseSuccessModal() {
+    setShowSuccess(false)
+    navigate(location.pathname, { replace: true, state: null })
+  }
 
   function showActionError(title: string, error: unknown) {
     const message =
@@ -216,7 +228,7 @@ export function UniverseDetailPage() {
         open={showSuccess}
         message={successMessage}
         description={successDescription}
-        onClose={() => setShowSuccess(false)}
+        onClose={handleCloseSuccessModal}
       />
 
       {selectedUniverse && (
