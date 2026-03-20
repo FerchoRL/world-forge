@@ -6,6 +6,8 @@ import { ValidationError } from '../../errors/validation.error'
 
 export class ListCharactersService {
 
+    private static readonly MAX_SEARCH_LENGTH = 120
+
     constructor(
         private readonly repository: CharacterRepository
     ) { }
@@ -13,6 +15,8 @@ export class ListCharactersService {
     async execute(query?: ListCharactersQuery): Promise<ListCharactersResponse> {
         const rawPage = query?.page
         const rawLimit = query?.limit
+        const rawSearch = query?.search
+        const rawStatus = query?.status
 
         if (
             rawPage !== undefined &&
@@ -28,6 +32,10 @@ export class ListCharactersService {
             throw new ValidationError('Limit must be a positive integer')
         }
 
+        if (rawSearch !== undefined && typeof rawSearch !== 'string') {
+            throw new ValidationError('Search must be a string')
+        }
+
         const page =
             typeof rawPage === 'number' ? rawPage : 1
 
@@ -36,7 +44,39 @@ export class ListCharactersService {
                 ? Math.min(rawLimit, 50)
                 : 10
 
-        const result = await this.repository.list(page, limit)
+        const normalizedSearch =
+            typeof rawSearch === 'string'
+                ? rawSearch.trim().replace(/\s+/g, ' ')
+                : ''
+
+        if (normalizedSearch.length > ListCharactersService.MAX_SEARCH_LENGTH) {
+            throw new ValidationError(
+                `Search must be at most ${ListCharactersService.MAX_SEARCH_LENGTH} characters`
+            )
+        }
+
+        const search =
+            normalizedSearch.length > 0
+                ? normalizedSearch
+                : undefined
+
+        if (
+            rawStatus !== undefined &&
+            rawStatus !== 'DRAFT' &&
+            rawStatus !== 'ACTIVE' &&
+            rawStatus !== 'ARCHIVED'
+        ) {
+            throw new ValidationError('Status must be DRAFT, ACTIVE or ARCHIVED')
+        }
+
+        const status = rawStatus
+
+        const result = await this.repository.list({
+            page,
+            limit,
+            search,
+            status,
+        })
 
         if (!result.ok) {
             throw mapRepoErrorToAppError(result.error)

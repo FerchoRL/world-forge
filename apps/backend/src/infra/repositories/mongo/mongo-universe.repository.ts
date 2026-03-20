@@ -1,35 +1,30 @@
 import {
-    Character,
-    CharacterRepository,
-    CreateCharacterInput,
-    UpdateCharacterCoreInput,
-    ListCharactersParams,
+    CreateUniverseInput,
+    ListUniversesParams,
+    PaginatedUniverseResult,
+    RepoResult,
+    Universe,
+    UniverseId,
+    UniverseRepository,
+    UpdateUniverseCoreInput,
 } from '@world-forge/domain'
-import { RepoResult } from '@world-forge/domain'
-import { CharacterId } from '@world-forge/domain'
 
+import { UniverseMongoMapper } from '../../mappers/universe.mongo-mapper'
+import { UniverseModel } from '../../schemas/universe.schema'
 
-import { CharacterModel } from '../../schemas/character.schema'
-import { CharacterMongoMapper } from '../../mappers/character.mongo-mapper'
-
-/**
- * Implementacion Mongo del repositorio de Character
- * Infraestructura sin lógica de negocio
- */
-
-export class MongoCharacterRepository implements CharacterRepository {
-
-    // Lee un character por id
-    async getById(id: CharacterId): Promise<RepoResult<Character | null>> {
+// Implementación Mongo del repositorio de Universe
+export class MongoUniverseRepository implements UniverseRepository {
+    async getById(id: UniverseId): Promise<RepoResult<Universe | null>> {
         try {
-            const doc = await CharacterModel.findById(id).lean()
+            const doc = await UniverseModel.findById(id).lean()
+
             if (!doc) {
                 return { ok: true, data: null }
             }
 
             return {
                 ok: true,
-                data: CharacterMongoMapper.toDomain(doc)
+                data: UniverseMongoMapper.toDomain(doc),
             }
         } catch (error: unknown) {
             const err = error as any
@@ -39,9 +34,9 @@ export class MongoCharacterRepository implements CharacterRepository {
                     ok: false,
                     error: {
                         code: 'VALIDATION',
-                        message: err.message ?? 'Validation error while fetching character by id',
+                        message: err.message ?? 'Validation error while fetching universe by id',
                         meta: { name: err.name, errors: err.errors },
-                    }
+                    },
                 }
             }
 
@@ -49,15 +44,14 @@ export class MongoCharacterRepository implements CharacterRepository {
                 ok: false,
                 error: {
                     code: 'UNKNOWN',
-                    message: err?.message ?? 'Error fetching character from database',
+                    message: err?.message ?? 'Error fetching universe from database',
                     meta: { name: err?.name, stack: err?.stack },
-                }
+                },
             }
         }
     }
 
-    // Lista characters de forma paginada
-    async list(params: ListCharactersParams): Promise<RepoResult<{ items: Character[]; total: number }>> {
+    async list(params: ListUniversesParams): Promise<RepoResult<PaginatedUniverseResult>> {
         try {
             const { page, limit, search, status } = params
             const skip = (page - 1) * limit
@@ -74,24 +68,24 @@ export class MongoCharacterRepository implements CharacterRepository {
 
                 filter.$or = [
                     { name: regex },
-                    { identity: regex },
-                    { inspirations: regex },
-                    { categories: regex },
+                    { premise: regex },
+                    { notes: regex },
+                    { rules: regex },
                 ]
             }
 
             const [docs, total] = await Promise.all([
-                CharacterModel.find(filter)
+                UniverseModel.find(filter)
                     .skip(skip)
                     .limit(limit)
                     .lean(),
-                CharacterModel.countDocuments(filter),
+                UniverseModel.countDocuments(filter),
             ])
 
             return {
                 ok: true,
                 data: {
-                    items: docs.map(CharacterMongoMapper.toDomain),
+                    items: docs.map(UniverseMongoMapper.toDomain),
                     total,
                 },
             }
@@ -103,7 +97,7 @@ export class MongoCharacterRepository implements CharacterRepository {
                     ok: false,
                     error: {
                         code: 'VALIDATION',
-                        message: err.message ?? 'Validation error while listing characters',
+                        message: err.message ?? 'Validation error while listing universes',
                         meta: { name: err.name, errors: err.errors },
                     },
                 }
@@ -113,110 +107,21 @@ export class MongoCharacterRepository implements CharacterRepository {
                 ok: false,
                 error: {
                     code: 'UNKNOWN',
-                    message: err?.message ?? 'Error listing paginated characters from database',
+                    message: err?.message ?? 'Error listing universes from database',
                     meta: { name: err?.name, stack: err?.stack },
                 },
             }
         }
     }
 
-
-    // Crea un character en persistencia
-    async create(input: CreateCharacterInput): Promise<RepoResult<Character>> {
+    async create(input: CreateUniverseInput): Promise<RepoResult<Universe>> {
         try {
-            // Mapea a formato de persistencia
-            const doc = CharacterMongoMapper.toPersistence(input)
-            await CharacterModel.create(doc)
-            return {
-                ok: true,
-                data: {
-                    id: input.id,
-                    name: input.name,
-                    status: input.status,
-                    categories: input.categories,
-                    identity: input.identity,
-                    inspirations: input.inspirations,
-                    notes: input.notes,
-                    image: input.image,
-                }
-            }
-        } catch (error: unknown) {
-            //Clasificacion de errores de DB para RepoResult (Sin HTTP aqui)
-            const err = error as any
-            //Mongo duplicate key error
-            if (err.code === 11000) {
-                return {
-                    ok: false,
-                    error: {
-                        code: 'CONFLICT',
-                        message: 'Character name already exists for an ACTIVE or DRAFT character',
-                        meta: { mongoCode: err.code, keyValue: err.keyValue }
-                    }
-                }
-            }
-
-            // Mongoose validation error (enum/required/minlength/etc)
-            if (err.name === 'ValidationError') {
-                return {
-                    ok: false,
-                    error: {
-                        code: 'VALIDATION',
-                        message: err.message ?? 'Validation error',
-                        meta: { name: err.name, errors: err.errors }
-                    }
-                }
-            }
-            return {
-                ok: false,
-                error: {
-                    code: 'UNKNOWN',
-                    message: err?.message ?? 'Error creating character in database',
-                    meta: { name: err?.name, stack: err?.stack },
-                }
-            }
-        }
-    }
-
-    // Actualiza campos del núcleo conceptual
-    async updateCore(
-        id: CharacterId,
-        patch: UpdateCharacterCoreInput
-    ): Promise<RepoResult<Character>> {
-        try {
-            const updateDoc = {
-                ...patch,
-            }
-
-            const updateResult = await CharacterModel.updateOne(
-                { _id: id },
-                { $set: updateDoc }
-            )
-
-            if (updateResult.matchedCount === 0) {
-                return {
-                    ok: false,
-                    error: {
-                        code: 'NOT_FOUND',
-                        message: 'Character not found'
-                    }
-                }
-            }
-
-            const updatedDoc = await CharacterModel.findById(id).lean()
-
-            if (!updatedDoc) {
-                return {
-                    ok: false,
-                    error: {
-                        code: 'NOT_FOUND',
-                        message: 'Character not found after update'
-                    }
-                }
-            }
+            const doc = UniverseMongoMapper.toPersistence(input)
+            await UniverseModel.create(doc)
 
             return {
                 ok: true,
-                data: CharacterMongoMapper.toDomain(updatedDoc)
+                data: input,
             }
         } catch (error: unknown) {
             const err = error as any
@@ -226,9 +131,9 @@ export class MongoCharacterRepository implements CharacterRepository {
                     ok: false,
                     error: {
                         code: 'CONFLICT',
-                        message: 'Character name already exists for an ACTIVE or DRAFT character',
+                        message: 'Universe name already exists for an ACTIVE or DRAFT universe',
                         meta: { mongoCode: err.code, keyValue: err.keyValue },
-                    }
+                    },
                 }
             }
 
@@ -237,9 +142,9 @@ export class MongoCharacterRepository implements CharacterRepository {
                     ok: false,
                     error: {
                         code: 'VALIDATION',
-                        message: err.message ?? 'Validation error while updating character',
+                        message: err.message ?? 'Validation error while creating universe',
                         meta: { name: err.name, errors: err.errors },
-                    }
+                    },
                 }
             }
 
@@ -247,20 +152,95 @@ export class MongoCharacterRepository implements CharacterRepository {
                 ok: false,
                 error: {
                     code: 'UNKNOWN',
-                    message: err?.message ?? 'Error updating character in database',
+                    message: err?.message ?? 'Error creating universe in database',
                     meta: { name: err?.name, stack: err?.stack },
-                }
+                },
             }
         }
     }
 
-    // Cambia únicamente el status del character
-    async changeStatus(
-        id: CharacterId,
-        status: 'ACTIVE' | 'ARCHIVED'
-    ): Promise<RepoResult<Character>> {
+    async updateCore(
+        id: UniverseId,
+        patch: UpdateUniverseCoreInput
+    ): Promise<RepoResult<Universe>> {
         try {
-            const updatedDoc = await CharacterModel.findOneAndUpdate(
+            const updateDoc = {
+                ...patch,
+            }
+
+            const updateResult = await UniverseModel.updateOne(
+                { _id: id },
+                { $set: updateDoc }
+            )
+
+            if (updateResult.matchedCount === 0) {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'NOT_FOUND',
+                        message: 'Universe not found',
+                    },
+                }
+            }
+
+            const updatedDoc = await UniverseModel.findById(id).lean()
+
+            if (!updatedDoc) {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'NOT_FOUND',
+                        message: 'Universe not found after update',
+                    },
+                }
+            }
+
+            return {
+                ok: true,
+                data: UniverseMongoMapper.toDomain(updatedDoc),
+            }
+        } catch (error: unknown) {
+            const err = error as any
+
+            if (err?.code === 11000) {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'CONFLICT',
+                        message: 'Universe name already exists for an ACTIVE or DRAFT universe',
+                        meta: { mongoCode: err.code, keyValue: err.keyValue },
+                    },
+                }
+            }
+
+            if (err?.name === 'ValidationError') {
+                return {
+                    ok: false,
+                    error: {
+                        code: 'VALIDATION',
+                        message: err.message ?? 'Validation error while updating universe',
+                        meta: { name: err.name, errors: err.errors },
+                    },
+                }
+            }
+
+            return {
+                ok: false,
+                error: {
+                    code: 'UNKNOWN',
+                    message: err?.message ?? 'Error updating universe in database',
+                    meta: { name: err?.name, stack: err?.stack },
+                },
+            }
+        }
+    }
+
+    async changeStatus(
+        id: UniverseId,
+        status: 'ACTIVE' | 'ARCHIVED'
+    ): Promise<RepoResult<Universe>> {
+        try {
+            const updatedDoc = await UniverseModel.findOneAndUpdate(
                 { _id: id },
                 { $set: { status } },
                 {
@@ -275,14 +255,14 @@ export class MongoCharacterRepository implements CharacterRepository {
                     ok: false,
                     error: {
                         code: 'NOT_FOUND',
-                        message: 'Character not found'
-                    }
+                        message: 'Universe not found',
+                    },
                 }
             }
 
             return {
                 ok: true,
-                data: CharacterMongoMapper.toDomain(updatedDoc)
+                data: UniverseMongoMapper.toDomain(updatedDoc),
             }
         } catch (error: unknown) {
             const err = error as any
@@ -292,9 +272,9 @@ export class MongoCharacterRepository implements CharacterRepository {
                     ok: false,
                     error: {
                         code: 'CONFLICT',
-                        message: 'Character name already exists for an ACTIVE or DRAFT character',
+                        message: 'Universe name already exists for an ACTIVE or DRAFT universe',
                         meta: { mongoCode: err.code, keyValue: err.keyValue },
-                    }
+                    },
                 }
             }
 
@@ -303,9 +283,9 @@ export class MongoCharacterRepository implements CharacterRepository {
                     ok: false,
                     error: {
                         code: 'VALIDATION',
-                        message: err.message ?? 'Validation error while changing character status',
+                        message: err.message ?? 'Validation error while changing universe status',
                         meta: { name: err.name, errors: err.errors },
-                    }
+                    },
                 }
             }
 
@@ -313,11 +293,10 @@ export class MongoCharacterRepository implements CharacterRepository {
                 ok: false,
                 error: {
                     code: 'UNKNOWN',
-                    message: err?.message ?? 'Error changing character status in database',
+                    message: err?.message ?? 'Error changing universe status in database',
                     meta: { name: err?.name, stack: err?.stack },
-                }
+                },
             }
         }
     }
-
 }

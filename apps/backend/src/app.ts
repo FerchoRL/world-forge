@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { healthRouter } from './routes/health.route';
 import characterRoutes from './routes/character.routes';
+import universeRoutes from './routes/universe.routes';
 import { errorHandler } from './middlewares/error-handler.middleware';
 
 export function createApp() {
@@ -16,6 +17,9 @@ export function createApp() {
 
     //Character routes
     app.use('/characters', characterRoutes)
+
+    //Universe routes
+    app.use('/universes', universeRoutes)
 
     // Global JSON 404 for unknown routes
     app.use((_req, res) => {

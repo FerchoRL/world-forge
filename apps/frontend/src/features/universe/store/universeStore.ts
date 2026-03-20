@@ -1,9 +1,13 @@
 import { create } from 'zustand'
-import { characterService } from '@/app/services/characterService'
-import type { CharacterListItem, StatusFilter } from '@/features/character/types'
+
+import { universeService } from '@/app/services/universeService'
+import type {
+  UniverseListItem,
+  UniverseStatusFilter,
+} from '@/features/universe/types'
 
 let listAbortController: AbortController | null = null
-// Identifica el último request disparado para ignorar respuestas viejas.
+// Identifica el ultimo request disparado para ignorar respuestas viejas.
 let activeListRequestId = 0
 
 function isAbortError(error: unknown): boolean {
@@ -13,15 +17,15 @@ function isAbortError(error: unknown): boolean {
   )
 }
 
-interface CharacterState {
+interface UniverseState {
   // ======================
   // List
   // ======================
-  characters: CharacterListItem[]
-  charactersLoading: boolean
-  charactersError: string | null
+  universes: UniverseListItem[]
+  universesLoading: boolean
+  universesError: string | null
 
-  // Pagination (NEW)
+  // Pagination
   page: number
   limit: number
   total: number
@@ -30,36 +34,32 @@ interface CharacterState {
   // ======================
   // Detail
   // ======================
-  selectedCharacter: CharacterListItem | null
+  selectedUniverse: UniverseListItem | null
   detailLoading: boolean
   detailError: string | null
 
-  // ======================
-  // UI Filters (NEW)
-  // ======================
+  // UI Filters
   searchTerm: string
-  statusFilter: StatusFilter
+  statusFilter: UniverseStatusFilter
 
-  // ======================
   // Actions
-  // ======================
-  fetchInitialCharacters: () => Promise<void>
-  loadMoreCharacters: () => Promise<void>
-  fetchCharacterById: (id: string) => Promise<void>
+  fetchInitialUniverses: () => Promise<void>
+  loadMoreUniverses: () => Promise<void>
+  fetchUniverseById: (id: string) => Promise<void>
   clearErrors: () => void
 
   // UI actions
   setSearchTerm: (term: string) => void
-  setStatusFilter: (status: StatusFilter) => void
+  setStatusFilter: (status: UniverseStatusFilter) => void
 }
 
-export const useCharacterStore = create<CharacterState>((set, get) => ({
+export const useUniverseStore = create<UniverseState>((set, get) => ({
   // ======================
   // List
   // ======================
-  characters: [],
-  charactersLoading: false,
-  charactersError: null,
+  universes: [],
+  universesLoading: false,
+  universesError: null,
 
   // ======================
   // Pagination
@@ -72,7 +72,7 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
   // ======================
   // Detail
   // ======================
-  selectedCharacter: null,
+  selectedUniverse: null,
   detailLoading: false,
   detailError: null,
 
@@ -85,17 +85,17 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
   // ======================
   // Actions
   // ======================
-  fetchInitialCharacters: async () => {
-    // Cancela el request anterior cuando cambia búsqueda/filtro.
+  fetchInitialUniverses: async () => {
+    // Cancela el request anterior cuando cambia busqueda/filtro.
     listAbortController?.abort()
     listAbortController = new AbortController()
     const requestId = ++activeListRequestId
 
-    set({ charactersLoading: true, charactersError: null })
+    set({ universesLoading: true, universesError: null })
 
     try {
       const { limit, searchTerm, statusFilter } = get()
-      const response = await characterService.getAll({
+      const response = await universeService.getAll({
         page: 1,
         limit,
         search: searchTerm,
@@ -104,16 +104,16 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
         signal: listAbortController.signal,
       })
 
-      // Si llegó una respuesta vieja, no toca el estado.
+      // Si llego una respuesta vieja, no toca el estado.
       if (requestId !== activeListRequestId) {
         return
       }
 
       set({
-        characters: response.characters,
+        universes: response.universes,
         total: response.total,
         page: 1,
-        hasMore: response.characters.length < response.total,
+        hasMore: response.universes.length < response.total,
       })
     } catch (error) {
       // Abort no es error funcional, solo un reemplazo de request.
@@ -126,28 +126,28 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
       }
 
       console.error(error)
-      set({ charactersError: 'Failed to load characters' })
+      set({ universesError: 'Failed to load universes' })
     } finally {
       if (requestId === activeListRequestId) {
-        set({ charactersLoading: false })
+        set({ universesLoading: false })
         listAbortController = null
       }
     }
   },
 
-  loadMoreCharacters: async () => {
-    const { page, limit, characters, total, charactersLoading } = get()
+  loadMoreUniverses: async () => {
+    const { page, limit, universes, total, universesLoading } = get()
 
-    if (charactersLoading) return
-    if (characters.length >= total) return
+    if (universesLoading) return
+    if (universes.length >= total) return
 
-    set({ charactersLoading: true })
+    set({ universesLoading: true })
 
     try {
       const nextPage = page + 1
       const { searchTerm, statusFilter } = get()
 
-      const response = await characterService.getAll({
+      const response = await universeService.getAll({
         page: nextPage,
         limit,
         search: searchTerm,
@@ -155,27 +155,27 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
       })
 
       set({
-        characters: [...characters, ...response.characters],
+        universes: [...universes, ...response.universes],
         page: nextPage,
-        hasMore: characters.length + response.characters.length < total,
+        hasMore: universes.length + response.universes.length < total,
       })
     } catch (error) {
       console.error(error)
-      set({ charactersError: 'Failed to load more characters' })
+      set({ universesError: 'Failed to load more universes' })
     } finally {
-      set({ charactersLoading: false })
+      set({ universesLoading: false })
     }
   },
 
-  fetchCharacterById: async (id: string) => {
+  fetchUniverseById: async (id: string) => {
     set({ detailLoading: true, detailError: null })
 
     try {
-      const character = await characterService.getById(id)
-      set({ selectedCharacter: character })
+      const universe = await universeService.getById(id)
+      set({ selectedUniverse: universe })
     } catch (error) {
       console.error(error)
-      set({ detailError: 'Failed to load character detail' })
+      set({ detailError: 'Failed to load universe detail' })
     } finally {
       set({ detailLoading: false })
     }
@@ -183,9 +183,9 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
 
   clearErrors: () => {
     set({
-      charactersError: null,
+      universesError: null,
       detailError: null,
-      selectedCharacter: null,
+      selectedUniverse: null,
     })
   },
 
@@ -196,7 +196,7 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
     set({ searchTerm: term })
   },
 
-  setStatusFilter: (status: StatusFilter) => {
+  setStatusFilter: (status: UniverseStatusFilter) => {
     set({ statusFilter: status })
   },
 }))

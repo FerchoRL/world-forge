@@ -1,5 +1,6 @@
-import { CharacterId} from '@world-forge/domain'
+import { CharacterId, UniverseId } from '@world-forge/domain'
 
 export interface IdGenerator {
-    generate(): CharacterId
+    generateCharacterId(): CharacterId
+    generateUniverseId(): UniverseId
 }

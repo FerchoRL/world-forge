@@ -57,7 +57,7 @@ export class CreateCharacterFromArchivedService {
             image,
         })
 
-        const newId = this.idGenerator.generate()
+        const newId = this.idGenerator.generateCharacterId()
 
         const createResult = await this.repository.create({
             id: newId,

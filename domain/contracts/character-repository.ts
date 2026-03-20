@@ -1,11 +1,19 @@
 import { Character } from '../models'
 import { CategoryName, CharacterId } from '../types'
 import { RepoResult } from './repo-errors'
+import { Status } from '../types'
 
 //Resultado paginado generico
 export interface PaginatedResult<T> {
     items: T[]
     total: number
+}
+
+export interface ListCharactersParams {
+    page: number
+    limit: number
+    search?: string
+    status?: Status
 }
 
 export interface CreateCharacterInput {
@@ -31,10 +39,7 @@ export interface UpdateCharacterCoreInput {
 //Repository responde : como leo y guardo entidades del dominio (guardar, leer, actualizar, archivar)
 export interface CharacterRepository {
     getById(id: CharacterId): Promise<RepoResult<Character | null>>
-    list(
-        page: number,
-        limit: number
-    ): Promise<RepoResult<PaginatedResult<Character>>>
+    list(params: ListCharactersParams): Promise<RepoResult<PaginatedResult<Character>>>
 
     create(input: CreateCharacterInput): Promise<RepoResult<Character>>
 

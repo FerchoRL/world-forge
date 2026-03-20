@@ -43,7 +43,7 @@ export class CreateCharacterService {
 
 
         // Genera ID
-        const newId = this.idGenerator.generate()
+        const newId = this.idGenerator.generateCharacterId()
 
         // Mapea a dominio
         const newCharacter = CharacterMapper.toDomain(newId, {
