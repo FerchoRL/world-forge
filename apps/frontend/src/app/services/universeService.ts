@@ -124,4 +124,22 @@ export const universeService = {
       notes: response.universe.notes,
     }
   },
+
+  async createFromArchived(
+    id: string
+  ): Promise<UniverseListItem> {
+    const response = await httpClient.post<CreateUniverseApiResponse>(
+      `/universes/${id}/create-from-archived`,
+      {}
+    )
+
+    return {
+      id: response.universe.id,
+      name: response.universe.name,
+      status: response.universe.status,
+      premise: response.universe.premise,
+      rules: response.universe.rules,
+      notes: response.universe.notes,
+    }
+  },
 }

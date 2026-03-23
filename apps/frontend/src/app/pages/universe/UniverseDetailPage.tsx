@@ -153,13 +153,7 @@ export function UniverseDetailPage() {
     setDuplicating(true)
 
     try {
-      const created = await universeService.createUniverse({
-        name: selectedUniverse.name,
-        status: 'DRAFT',
-        premise: selectedUniverse.premise ?? '',
-        rules: selectedUniverse.rules,
-        notes: selectedUniverse.notes,
-      })
+      const created = await universeService.createFromArchived(selectedUniverse.id)
 
       navigate(`/universes/${created.id}/edit`, {
         state: {
