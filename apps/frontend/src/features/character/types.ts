@@ -48,16 +48,6 @@ export interface UpdateCharacterRequest {
   image?: string
 }
 
-export interface CreateCharacterFromArchivedRequest {
-  name?: string
-  identity?: string
-  categories?: CategoryName[]
-  inspirations?: string[]
-  notes?: string
-  image?: string
-  status?: 'DRAFT' | 'ACTIVE'
-}
-
 // Respuesta al listar personajes
 export interface ListCharactersApiResponse {
   characters: CharacterApiDTO[]

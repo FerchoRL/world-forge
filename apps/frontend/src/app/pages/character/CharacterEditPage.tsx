@@ -61,10 +61,14 @@ export function CharacterEditPage() {
   }, [detailError])
 
   useEffect(() => {
-    if (selectedCharacter?.status === 'ARCHIVED') {
+    if (
+      selectedCharacter &&
+      selectedCharacter.id === id &&
+      selectedCharacter.status === 'ARCHIVED'
+    ) {
       setShowEditBlocked(true)
     }
-  }, [selectedCharacter])
+  }, [id, selectedCharacter])
 
   async function handleUpdateCharacter(payload: UpdateCharacterRequest): Promise<void> {
     if (!id) {
@@ -136,7 +140,7 @@ export function CharacterEditPage() {
         onClose={handleCloseSuccessModal}
       />
 
-      {selectedCharacter && selectedCharacter.status !== 'ARCHIVED' && (
+      {selectedCharacter && selectedCharacter.id === id && selectedCharacter.status !== 'ARCHIVED' && (
         <div className="space-y-6 p-8">
           <div className="flex items-center gap-4">
             <Link to={`/characters/${selectedCharacter.id}`}>

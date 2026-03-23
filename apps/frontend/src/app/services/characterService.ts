@@ -3,7 +3,6 @@ import { httpClient } from '@/app/api/httpClient'
 import type {
     CharacterApiDTO,
     CreateCharacterApiResponse,
-    CreateCharacterFromArchivedRequest,
     CreateCharacterRequest,
     ListCharactersApiResponse,
     ListCharactersQuery,
@@ -146,12 +145,11 @@ export const characterService = {
     },
 
     async createFromArchived(
-        id: string,
-        payload?: CreateCharacterFromArchivedRequest
+        id: string
     ): Promise<CharacterListItem> {
         const response = await httpClient.post<CreateCharacterApiResponse>(
             `/characters/${id}/create-from-archived`,
-            payload ?? {}
+            {}
         )
 
         return {

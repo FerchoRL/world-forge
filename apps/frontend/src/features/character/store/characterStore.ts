@@ -6,6 +6,7 @@ import type { CharacterListItem, StatusFilter } from '@/features/character/types
 let listAbortController: AbortController | null = null
 // Identifica el último request disparado para ignorar respuestas viejas.
 let activeListRequestId = 0
+let activeDetailRequestId = 0
 
 function isAbortError(error: unknown): boolean {
   return (
@@ -169,16 +170,33 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
   },
 
   fetchCharacterById: async (id: string) => {
-    set({ detailLoading: true, detailError: null })
+    const requestId = ++activeDetailRequestId
+
+    set((state) => ({
+      detailLoading: true,
+      detailError: null,
+      selectedCharacter: state.selectedCharacter?.id === id ? state.selectedCharacter : null,
+    }))
 
     try {
       const character = await characterService.getById(id)
+
+      if (requestId !== activeDetailRequestId) {
+        return
+      }
+
       set({ selectedCharacter: character })
     } catch (error) {
+      if (requestId !== activeDetailRequestId) {
+        return
+      }
+
       console.error(error)
       set({ detailError: getApiErrorMessage(error, 'Failed to load character detail') })
     } finally {
-      set({ detailLoading: false })
+      if (requestId === activeDetailRequestId) {
+        set({ detailLoading: false })
+      }
     }
   },
 
