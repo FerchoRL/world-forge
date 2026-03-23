@@ -7,3 +7,7 @@ const STATUS_CLASSES: Record<string, string> = {
 export function getCharacterStatusClass(status: string): string {
   return STATUS_CLASSES[status] ?? 'bg-zinc-100 text-zinc-600'
 }
+
+export function getCharacterStatusLabel(status: string): string {
+  return status
+}

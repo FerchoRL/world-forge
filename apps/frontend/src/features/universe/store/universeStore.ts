@@ -10,6 +10,7 @@ import type {
 let listAbortController: AbortController | null = null
 // Identifica el ultimo request disparado para ignorar respuestas viejas.
 let activeListRequestId = 0
+let activeDetailRequestId = 0
 
 function isAbortError(error: unknown): boolean {
   return (
@@ -173,18 +174,35 @@ export const useUniverseStore = create<UniverseState>((set, get) => ({
   },
 
   fetchUniverseById: async (id: string) => {
-    set({ detailLoading: true, detailError: null })
+    const requestId = ++activeDetailRequestId
+
+    set((state) => ({
+      detailLoading: true,
+      detailError: null,
+      selectedUniverse: state.selectedUniverse?.id === id ? state.selectedUniverse : null,
+    }))
 
     try {
       const universe = await universeService.getById(id)
+
+      if (requestId !== activeDetailRequestId) {
+        return
+      }
+
       set({ selectedUniverse: universe })
     } catch (error) {
+      if (requestId !== activeDetailRequestId) {
+        return
+      }
+
       console.error(error)
       set({
         detailError: getApiErrorMessage(error, 'Failed to load universe detail'),
       })
     } finally {
-      set({ detailLoading: false })
+      if (requestId === activeDetailRequestId) {
+        set({ detailLoading: false })
+      }
     }
   },
 

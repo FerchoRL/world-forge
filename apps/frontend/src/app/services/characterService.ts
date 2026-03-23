@@ -2,11 +2,15 @@ import { httpClient } from '@/app/api/httpClient'
 
 import type {
     CharacterApiDTO,
+    CreateCharacterApiResponse,
+    CreateCharacterRequest,
     ListCharactersApiResponse,
     ListCharactersQuery,
     CharacterListItem,
     GetCharacterByIdApiResponse,
     PaginatedCharactersResponse,
+    UpdateCharacterApiResponse,
+    UpdateCharacterRequest,
 } from '@/features/character/types'
 
 /**
@@ -68,6 +72,85 @@ export const characterService = {
     async getById(id: string): Promise<CharacterListItem> {
         const response =
             await httpClient.get<GetCharacterByIdApiResponse>(`/characters/${id}`)
+
+        return {
+            id: response.character.id,
+            name: response.character.name,
+            status: response.character.status,
+            categories: response.character.categories,
+            identity: response.character.identity,
+            inspirations: response.character.inspirations,
+            notes: response.character.notes,
+            image: response.character.image,
+        }
+    },
+
+    async createCharacter(
+        payload: CreateCharacterRequest
+    ): Promise<CharacterListItem> {
+        const response = await httpClient.post<CreateCharacterApiResponse>(
+            '/characters',
+            payload
+        )
+
+        return {
+            id: response.character.id,
+            name: response.character.name,
+            status: response.character.status,
+            categories: response.character.categories,
+            identity: response.character.identity,
+            inspirations: response.character.inspirations,
+            notes: response.character.notes,
+            image: response.character.image,
+        }
+    },
+
+    async updateCharacter(
+        id: string,
+        payload: UpdateCharacterRequest
+    ): Promise<CharacterListItem> {
+        const response = await httpClient.patch<UpdateCharacterApiResponse>(
+            `/characters/${id}`,
+            payload
+        )
+
+        return {
+            id: response.character.id,
+            name: response.character.name,
+            status: response.character.status,
+            categories: response.character.categories,
+            identity: response.character.identity,
+            inspirations: response.character.inspirations,
+            notes: response.character.notes,
+            image: response.character.image,
+        }
+    },
+
+    async changeStatus(id: string, status: 'ACTIVE' | 'ARCHIVED'): Promise<CharacterListItem> {
+        const response = await httpClient.patch<UpdateCharacterApiResponse>(
+            `/characters/${id}/status`,
+            { status }
+        )
+
+        return {
+            id: response.character.id,
+            name: response.character.name,
+            status: response.character.status,
+            categories: response.character.categories,
+            identity: response.character.identity,
+            inspirations: response.character.inspirations,
+            notes: response.character.notes,
+            image: response.character.image,
+        }
+    },
+
+    async createFromArchived(
+        id: string
+    ): Promise<CharacterListItem> {
+        const response = await httpClient.post<CreateCharacterApiResponse>(
+            `/characters/${id}/create-from-archived`,
+            {}
+        )
 
         return {
             id: response.character.id,

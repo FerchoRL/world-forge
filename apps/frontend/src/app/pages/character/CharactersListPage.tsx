@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { Plus, Eye, Pencil, Search } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useCharacterStore } from '@/features/character/store/characterStore'
 import type { CharacterListItem, StatusFilter } from '@/features/character/types'
@@ -16,7 +16,11 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { getCharacterStatusClass } from '@/features/character/ui/statusBadge'
+import {
+  getCharacterStatusClass,
+  getCharacterStatusLabel,
+} from '@/features/character/ui/statusBadge'
+import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 
 export function CharactersListPage() {
   const navigate = useNavigate()
@@ -30,12 +34,14 @@ export function CharactersListPage() {
     fetchInitialCharacters,
     loadMoreCharacters,
   } = useCharacterStore()
+  const clearErrors = useCharacterStore((s) => s.clearErrors)
 
   const searchTerm = useCharacterStore((s) => s.searchTerm)
   const statusFilter = useCharacterStore((s) => s.statusFilter)
 
   const setSearchTerm = useCharacterStore((s) => s.setSearchTerm)
   const setStatusFilter = useCharacterStore((s) => s.setStatusFilter)
+  const [showApiError, setShowApiError] = useState(false)
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -45,8 +51,32 @@ export function CharactersListPage() {
     return () => clearTimeout(timeoutId)
   }, [fetchInitialCharacters, searchTerm, statusFilter])
 
+  useEffect(() => {
+    if (error) {
+      setShowApiError(true)
+    }
+  }, [error])
+
+  function handleCloseApiError() {
+    setShowApiError(false)
+    clearErrors()
+  }
+
   return (
-    <div className="p-8 space-y-6">
+    <>
+      <ConfirmationModal
+        open={showApiError}
+        eyebrow="API Error"
+        title="Characters could not be loaded"
+        message={error ?? ''}
+        confirmLabel="Close"
+        onConfirm={handleCloseApiError}
+        onCancel={handleCloseApiError}
+        showCancel={false}
+        confirmVariant="default"
+      />
+
+      <div className="p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl mb-2">Characters</h1>
@@ -55,7 +85,7 @@ export function CharactersListPage() {
           </p>
         </div>
 
-        <Button className="flex items-center gap-2">
+        <Button className="flex items-center gap-2" onClick={() => navigate('/characters/new')}>
           <Plus className="w-4 h-4" />
           New Character
         </Button>
@@ -87,12 +117,6 @@ export function CharactersListPage() {
           </select>
         </div>
       </div>
-
-      {error && (
-        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
 
       <div className="bg-white border border-zinc-200 rounded-lg overflow-x-auto">
         <Table className="table-fixed min-w-290">
@@ -130,7 +154,7 @@ export function CharactersListPage() {
                     variant="secondary"
                     className={getCharacterStatusClass(character.status)}
                   >
-                    {character.status}
+                    {getCharacterStatusLabel(character.status)}
                   </Badge>
                 </TableCell>
 
@@ -179,6 +203,7 @@ export function CharactersListPage() {
                       onClick={() =>
                         navigate(`/characters/${character.id}/edit`)
                       }
+                      disabled={character.status === 'ARCHIVED'}
                     >
                       <Pencil className="w-4 h-4" />
                       Edit
@@ -212,6 +237,7 @@ export function CharactersListPage() {
         </div>
       )}
 
-    </div>
+      </div>
+    </>
   )
 }

@@ -6,6 +6,7 @@ import { GetUniverseByIdService } from '../application/services/universe/get-uni
 import { ListUniversesService } from '../application/services/universe/list-universes.service'
 import { UpdateUniverseService } from '../application/services/universe/update-universe.service'
 import { ChangeUniverseStatusService } from '../application/services/universe/change-universe-status.service'
+import { CreateUniverseFromArchivedService } from '../application/services/universe/create-universe-from-archived.service'
 
 export class UniverseController {
     constructor(
@@ -13,7 +14,8 @@ export class UniverseController {
         private readonly getUniverseByIdService: GetUniverseByIdService,
         private readonly listUniversesService: ListUniversesService,
         private readonly updateUniverseService: UpdateUniverseService,
-        private readonly changeUniverseStatusService: ChangeUniverseStatusService
+        private readonly changeUniverseStatusService: ChangeUniverseStatusService,
+        private readonly createUniverseFromArchivedService: CreateUniverseFromArchivedService
     ) { }
 
     // Crea un universe nuevo
@@ -74,5 +76,14 @@ export class UniverseController {
         )
 
         res.status(200).json(result)
+    }
+
+    // Crea un universe nuevo copiando base conceptual de uno archivado
+    async createFromArchived(req: Request, res: Response): Promise<void> {
+        const result = await this.createUniverseFromArchivedService.execute(
+            req.params.id as string
+        )
+
+        res.status(201).json(result)
     }
 }

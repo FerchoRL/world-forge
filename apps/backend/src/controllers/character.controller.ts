@@ -1,4 +1,5 @@
 import { Request, Response } from 'express'
+import { Status } from '@world-forge/domain'
 import { CreateCharacterService } from '../application/services/character/create-character.service'
 import { GetCharacterByIdService } from '../application/services/character/get-character-by-id.service'
 import { ListCharactersService } from '../application/services/character/list-characters.service'
@@ -44,7 +45,7 @@ export class CharacterController {
 
         const status =
             typeof req.query.status === 'string'
-                ? req.query.status
+                ? (req.query.status as Status)
                 : undefined
 
         const result = await this.listCharactersService.execute({
@@ -78,8 +79,7 @@ export class CharacterController {
     // Crea un character nuevo copiando base conceptual de uno archivado
     async createFromArchived(req: Request, res: Response): Promise<void> {
         const result = await this.createCharacterFromArchivedService.execute(
-            req.params.id as string,
-            req.body
+            req.params.id as string
         )
         res.status(201).json(result)
     }

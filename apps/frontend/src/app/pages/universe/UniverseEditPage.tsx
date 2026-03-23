@@ -61,10 +61,14 @@ export function UniverseEditPage() {
   }, [detailError])
 
   useEffect(() => {
-    if (selectedUniverse?.status === 'ARCHIVED') {
+    if (
+      selectedUniverse &&
+      selectedUniverse.id === id &&
+      selectedUniverse.status === 'ARCHIVED'
+    ) {
       setShowEditBlocked(true)
     }
-  }, [selectedUniverse])
+  }, [id, selectedUniverse])
 
   async function handleUpdateUniverse(payload: UpdateUniverseRequest): Promise<void> {
     if (!id) {
@@ -136,7 +140,7 @@ export function UniverseEditPage() {
         onClose={handleCloseSuccessModal}
       />
 
-      {selectedUniverse && selectedUniverse.status !== 'ARCHIVED' && (
+      {selectedUniverse && selectedUniverse.id === id && selectedUniverse.status !== 'ARCHIVED' && (
       <div className="p-8 space-y-6">
         <div className="flex items-center gap-4">
           <Link to={`/universes/${selectedUniverse.id}`}>

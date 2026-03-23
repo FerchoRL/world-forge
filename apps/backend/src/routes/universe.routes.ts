@@ -5,6 +5,7 @@ import { GetUniverseByIdService } from '../application/services/universe/get-uni
 import { ListUniversesService } from '../application/services/universe/list-universes.service'
 import { UpdateUniverseService } from '../application/services/universe/update-universe.service'
 import { ChangeUniverseStatusService } from '../application/services/universe/change-universe-status.service'
+import { CreateUniverseFromArchivedService } from '../application/services/universe/create-universe-from-archived.service'
 import { SimpleIdGenerator } from '../application/ids/simple-id-generator'
 import { UniverseController } from '../controllers/universe.controller'
 import { MongoUniverseRepository } from '../infra/repositories/mongo/mongo-universe.repository'
@@ -36,18 +37,25 @@ const changeUniverseStatusService = new ChangeUniverseStatusService(
     universeRepository
 )
 
+const createUniverseFromArchivedService = new CreateUniverseFromArchivedService(
+    universeRepository,
+    idGenerator
+)
+
 const universeController = new UniverseController(
     createUniverseService,
     getUniverseByIdService,
     listUniversesService,
     updateUniverseService,
-    changeUniverseStatusService
+    changeUniverseStatusService,
+    createUniverseFromArchivedService
 )
 
 // Rutas de Universe
 router.post('/', (req, res) => universeController.create(req, res))
 router.get('/', (req, res) => universeController.list(req, res))
 router.get('/:id', (req, res) => universeController.getById(req, res))
+router.post('/:id/create-from-archived', (req, res) => universeController.createFromArchived(req, res))
 router.patch('/:id', (req, res) => universeController.update(req, res))
 router.patch('/:id/status', (req, res) => universeController.changeStatus(req, res))
 
