@@ -16,14 +16,14 @@ interface Props {
 }
 
 const navItems = [
-  { label: 'Dashboard', icon: Home, to: '/' },
-  { label: 'Characters', icon: Users, to: '/characters' },
-  { label: 'Character Variants', icon: UserRound, to: undefined },
-  { label: 'Stories', icon: BookOpen, to: undefined },
-  { label: 'Universes', icon: Globe, to: '/universes' },
-  { label: 'Locations', icon: MapPin, to: undefined },
-  { label: 'Arcs', icon: GitBranch, to: undefined },
-  { label: 'Healthcheck', icon: HeartPulse, to: '/health' },
+  { label: 'Dashboard', icon: Home, to: '/', testId: 'sidebar-nav-dashboard' },
+  { label: 'Characters', icon: Users, to: '/characters', testId: 'sidebar-nav-characters' },
+  { label: 'Character Variants', icon: UserRound, to: undefined, testId: 'sidebar-nav-character-variants' },
+  { label: 'Stories', icon: BookOpen, to: undefined, testId: 'sidebar-nav-stories' },
+  { label: 'Universes', icon: Globe, to: '/universes', testId: 'sidebar-nav-universes' },
+  { label: 'Locations', icon: MapPin, to: undefined, testId: 'sidebar-nav-locations' },
+  { label: 'Arcs', icon: GitBranch, to: undefined, testId: 'sidebar-nav-arcs' },
+  { label: 'Healthcheck', icon: HeartPulse, to: '/health', testId: 'sidebar-nav-healthcheck' },
 ]
 
 export function AppShell({ children }: Props) {
@@ -41,12 +41,12 @@ export function AppShell({ children }: Props) {
   return (
     <div className="flex h-screen bg-zinc-100">
       {/* Sidebar */}
-      <aside className="w-64 bg-zinc-950 text-white flex flex-col">
+      <aside data-testid="app-sidebar" className="w-64 bg-zinc-950 text-white flex flex-col">
         <div className="p-6">
           <h1 className="text-3xl font-semibold tracking-tight">World-Forge</h1>
         </div>
 
-        <nav className="flex-1 p-4">
+        <nav aria-label="Primary" className="flex-1 p-4">
           <ul className="space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon
@@ -66,13 +66,14 @@ export function AppShell({ children }: Props) {
                   {item.to ? (
                     <Link
                       to={item.to}
+                      data-testid={item.testId}
                       className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${itemClass}`}
                     >
                       <Icon className="w-5 h-5" />
                       <span className="text-lg">{item.label}</span>
                     </Link>
                   ) : (
-                    <div className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${itemClass}`}>
+                    <div data-testid={item.testId} className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${itemClass}`}>
                       <Icon className="w-5 h-5" />
                       <span className="text-lg">{item.label}</span>
                     </div>
