@@ -1,44 +1,81 @@
- # World-Forge Backend
+# World-Forge Backend
 
 Backend API del proyecto **World-Forge**.
 
 Este backend:
 
 - Consume el paquete interno `@world-forge/domain`
-- Expone endpoints HTTP (Express)
-- Implementa persistencia real con MongoDB Atlas (FASE 4)
-- Mantiene arquitectura limpia: domain define contratos, infra implementa
+- Expone endpoints HTTP con Express
+- Implementa persistencia real con MongoDB Atlas
+- Mantiene arquitectura limpia: `domain` define contratos, `infra` implementa
 
 ---
 
-## 🚀 Stack
+## Stack
 
 - Node.js
 - Express
 - TypeScript
-- tsx (dev server con hot reload)
+- tsx
 - dotenv
 - cors
-- mongoose (MongoDB Atlas)
+- mongoose
 
 ---
 
-## ▶️ Cómo arrancar el backend
+## Cómo arrancar el backend
 
 ```bash
 cd apps/backend
 npm install
-npm run dev
+npm run start
 ```
 
 Servidor:
 <http://localhost:3001>
 
 Salida esperada:
-🟢 MongoDB connected
-Server is running on <http://localhost:3001>
 
-## ❤️ Health Check
+- `Using DNS servers: 8.8.8.8, 1.1.1.1` (si aplica el fallback DNS)
+- `Mongo connected. Database: worldforge | Host: ...`
+- `Server running in development mode`
+- `http://localhost:3001`
+
+### Scripts disponibles
+
+```bash
+npm run start
+npm run dev
+npm run start:test
+npm run dev:test
+```
+
+- `start`: arranca el servidor usando `.env`
+- `dev`: arranca el servidor usando `.env` en modo watch
+- `start:test`: arranca el servidor usando `.env.test`
+- `dev:test`: arranca el servidor usando `.env.test` en modo watch
+
+### Variables de entorno
+
+Archivo `.env`:
+
+```env
+PORT=3001
+DNS_SERVERS=8.8.8.8,1.1.1.1
+MONGO_URI=mongodb+srv://<USER>:<PASSWORD>@<CLUSTER_HOST>/worldforge
+```
+
+Archivo `.env.test`:
+
+```env
+PORT=3002
+DNS_SERVERS=8.8.8.8,1.1.1.1
+MONGO_URI=mongodb+srv://<USER>:<PASSWORD>@<CLUSTER_HOST>/worldforge_test
+```
+
+`DNS_SERVERS` se usa como fallback local cuando Node no logra resolver el registro SRV de MongoDB Atlas con el DNS del sistema.
+
+## Health Check
 
 `GET /health`
 
@@ -51,147 +88,120 @@ Response
 }
 ```
 
-## 📦 Domain
+## Domain
 
-El backend consume @world-forge/domain como librería interna.
+El backend consume `@world-forge/domain` como librería interna.
 
 - No modifica modelos del dominio
 - No redefine entidades
-- No contiene lógica de negocio
-- El domain define contratos (interfaces/tipos)
-- La lógica vive en Application/Services (cuando toque)
+- No contiene lógica de negocio de persistencia
+- `domain` define contratos, interfaces y tipos
+- La lógica de aplicación vive en `application/services`
 
-## 🧱 Estructura actual
+## Estructura actual
 
 ```text
 apps/backend/src
 ├─ application/
 │  ├─ dtos/
 │  │  ├─ character/
-│  │  ├─ location/
 │  │  └─ universe/
 │  ├─ errors/
 │  ├─ ids/
 │  ├─ mappers/
-│  └─ services/
+│  ├─ services/
+│  └─ validators/
 ├─ controllers/
-│  └─ character.controller.ts
+│  ├─ character.controller.ts
+│  └─ universe.controller.ts
 ├─ infra/
 │  ├─ db/
 │  │  ├─ mongo.bootstrap.ts
 │  │  └─ mongo.connection.ts
 │  ├─ mappers/
-│  │  └─ character.mongo-mapper.ts
+│  │  ├─ character.mongo-mapper.ts
+│  │  └─ universe.mongo-mapper.ts
 │  ├─ repositories/
-│  │  ├─ in-memory/
 │  │  └─ mongo/
-│  │     └─ mongo-character.repository.ts
+│  │     ├─ mongo-character.repository.ts
+│  │     └─ mongo-universe.repository.ts
 │  └─ schemas/
-│     └─ character.schema.ts
+│     ├─ character.schema.ts
+│     └─ universe.schema.ts
+├─ middlewares/
+│  └─ error-handler.middleware.ts
 ├─ routes/
 │  ├─ character.routes.ts
-│  └─ health.route.ts
+│  ├─ health.route.ts
+│  └─ universe.routes.ts
 ├─ app.ts
 └─ server.ts
-
 ```
 
-## 🟠 FASE 4 — Persistencia real (MongoDB Atlas)
+## Persistencia real con MongoDB Atlas
 
-Esta fase conecta el backend a MongoDB Atlas y reemplaza repositorios in-memory por repositorios reales,
-sin cambiar controllers, routes ni services (solo wiring).
+El backend conecta a MongoDB Atlas sin cambiar controllers, routes ni services; sólo cambia el wiring de infraestructura.
 
-### ✅ Configuración (Atlas)
+### Configuración
 
-- Cluster: AniverseDB (existente)
-- Base de datos: worldforge
-- Collection: characters (primer agregado persistente)
-- Conexión por variable de entorno: MONGO_URI
+- Cluster: `AniverseDB`
+- Bases de datos usadas: `worldforge` y `worldforge_test`
+- Conexión por variable de entorno: `MONGO_URI`
 
-En .env:
+En `.env`:
 
 ```env
 PORT=3001
+DNS_SERVERS=8.8.8.8,1.1.1.1
 MONGO_URI=mongodb+srv://<USER>:<PASSWORD>@<CLUSTER_HOST>/worldforge?retryWrites=true&w=majority
 ```
 
-Nota:
+Notas:
 
 - El URI se obtiene en MongoDB Atlas → Connect → Drivers
-- No commitear credenciales
+- No commitear credenciales reales
+- Si Node falla con `querySrv ECONNREFUSED`, revisar `DNS_SERVERS` o el DNS del sistema
 
-## 🔌 Conexión y arranque
+## Conexión y arranque
 
 La conexión a Mongo se ejecuta antes de levantar el servidor.
 
-Archivos:
+Archivos clave:
 
-- src/infra/db/mongo.connection.ts
-- src/infra/db/mongo.bootstrap.ts
+- `src/infra/db/mongo.connection.ts`
+- `src/infra/db/mongo.bootstrap.ts`
+- `src/server.ts`
 
 Integración:
 
-- src/server.ts ejecuta bootstrapMongo() antes de app.listen()
-- Si Mongo falla → el backend no arranca
+- `src/server.ts` carga `.env` o `.env.test` según `NODE_ENV`
+- `src/server.ts` aplica `DNS_SERVERS` antes de conectarse a MongoDB
+- `bootstrapMongoDB()` se ejecuta antes de `app.listen()`
+- Si Mongo falla, el backend no arranca
 
-## 📦 Character persistente (schema + mapper + repo)
+## Persistencia de Character y Universe
 
-### Schema (ODM)
+Infraestructura disponible:
 
-Archivo:
+- Schemas: `character.schema.ts`, `universe.schema.ts`
+- Mappers: `character.mongo-mapper.ts`, `universe.mongo-mapper.ts`
+- Repositorios: `mongo-character.repository.ts`, `mongo-universe.repository.ts`
 
-- src/infra/schemas/character.schema.ts
+En `Character`:
 
-Decisiones:
+- `_id` es string
+- `categories` se guarda como `string[]`
+- `notes` puede venir como `null` desde Mongo y se normaliza en el mapper
+- `archive` cambia el `status` a `ARCHIVED`
 
-- _id es string (compatible con CharacterId)
-- categories se guarda como string[]
-- notes puede venir como null desde Mongo
-- timestamps activados
-
-### Mapper (Domain ↔ Mongo)
-
-Archivo:
-
-- src/infra/mappers/character.mongo-mapper.ts
-
-Decisiones:
-
-- Mongo → domain: normaliza notes: null a undefined
-- Mongo devuelve categories: string[]; el domain usa CategoryName[] (se mapea sin lógica)
-
-### Repositorio Mongo (infra)
-
-Archivo:
-
-- src/infra/repositories/mongo/mongo-character.repository.ts
-
-Implementa el contrato del domain:
-
-- getById(id): RepoResult<Character | null>
-- list(): RepoResult<Character[]>
-- create(input): RepoResult<Character>
-- update(id, patch): RepoResult<Character>
-- archive(id): RepoResult<void> (status → ARCHIVED)
-
-## 🔁 Switch de implementación (sin romper nada)
-
-- Antes: repositorio in-memory
-
-- Ahora: repositorio mongo
-
-Solo cambió la instancia inyectada/creada del repositorio
-
-## 🌐 Endpoints
+## Endpoints
 
 ### Character
 
 Base:
 <http://localhost:3001/characters>
 
-Crear: POST /characters
-
-body
+Crear: `POST /characters`
 
 ```json
 {
@@ -204,13 +214,11 @@ body
 }
 ```
 
-Obtener por ID: GET /characters/:id
+Obtener por ID: `GET /characters/:id`
 
-Listar: GET /characters
+Listar: `GET /characters`
 
-Actualizar (patch): PATCH /characters/:id
-
-body
+Actualizar: `PATCH /characters/:id`
 
 ```json
 {
@@ -219,4 +227,11 @@ body
 }
 ```
 
-Archivar: POST /characters/:id/archive
+Archivar: `POST /characters/:id/archive`
+
+### Universe
+
+Base:
+<http://localhost:3001/universes>
+
+El backend también expone rutas para `universe` con el mismo esquema de persistencia Mongo.
