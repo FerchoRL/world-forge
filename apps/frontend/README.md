@@ -12,7 +12,7 @@ Este frontend:
 
 ---
 
-## 🚀 Stack
+## Stack
 
 - Node.js
 - React 19
@@ -28,7 +28,7 @@ Este frontend:
 
 ---
 
-## 🧱 Estructura actual
+## Estructura actual
 
 ```text
 apps/frontend
@@ -41,6 +41,7 @@ apps/frontend
 ├─ public/          # Assets públicos servidos por Vite
 ├─ src/
 │  ├─ app/          # Router, layout, pages, services y wiring principal
+│  │  └─ api/       # Cliente HTTP base
 │  ├─ components/   # Componentes UI reutilizables
 │  ├─ features/     # Estado, tipos y lógica por feature
 │  ├─ shared/       # Config compartida e infraestructura liviana
@@ -57,14 +58,14 @@ apps/frontend
 
 ---
 
-## 🌐 Entornos
+## Entornos
 
 Este frontend usa **modes de Vite** para seleccionar a qué backend conectarse.
 
 - `development` → lee `.env.development`
 - `test` → lee `.env.test`
 
-Variables actuales:
+Archivos requeridos localmente:
 
 ```env
 # .env.development
@@ -78,13 +79,15 @@ VITE_API_BASE_URL=http://localhost:3002
 
 Notas:
 
+- Estos archivos no están versionados actualmente en el repo; debes crearlos en `apps/frontend`
 - `npm run dev` usa el modo por defecto de Vite y termina conectando al backend de desarrollo
 - `npm run dev:test` usa el modo `test` y conecta al backend de pruebas
 - El valor efectivo lo consume `src/shared/config/env.ts`
+- Si `VITE_API_BASE_URL` no existe, la app falla al arrancar con un error explícito
 
 ---
 
-## ▶️ Inicialización desde cero
+## Inicialización desde cero
 
 Si clonas el proyecto por primera vez, este frontend no usa workspaces automáticos ni scripts globales desde la raíz. La instalación se hace por paquete.
 
@@ -110,6 +113,12 @@ Desde `apps/frontend`:
 npx playwright install
 ```
 
+Si sólo quieres recuperar Chromium para la suite actual del proyecto:
+
+```bash
+npm run e2e:install
+```
+
 ### 4. Verificar entornos
 
 Antes de correr UI o E2E, confirma que existan estos archivos:
@@ -127,7 +136,7 @@ El flujo típico de trabajo local es:
 
 ---
 
-## ▶️ Cómo arrancar el frontend
+## Cómo arrancar el frontend
 
 ### Modo desarrollo
 
@@ -157,7 +166,7 @@ Este modo usa `VITE_API_BASE_URL=http://localhost:3002`.
 
 ---
 
-## 🧪 Automatización UI con Playwright
+## Automatización UI con Playwright
 
 La automatización E2E ya está configurada en este frontend.
 
@@ -166,6 +175,7 @@ Configuración actual:
 - `playwright.config.ts` usa `baseURL = http://localhost:5173`
 - Playwright **no levanta** frontend ni backend automáticamente
 - Los servicios deben estar corriendo antes de ejecutar los tests
+- La suite versionada actual está en `e2e/tests/smoke`
 
 Para ejecutar los tests contra el ambiente de pruebas, normalmente se usa este flujo:
 
@@ -206,13 +216,14 @@ npm run e2e:ui
 
 Notas importantes:
 
+- Si aparece `browserType.launch: Executable doesn't exist`, ejecuta `npm run e2e:install`
 - Si `5173` no está levantado, Playwright fallará con `ERR_CONNECTION_REFUSED`
 - Si el frontend fue levantado con `npm run dev` en lugar de `npm run dev:test`, la UI consumirá `http://localhost:3001`
 - Si el backend no está levantado en `3002`, la UI cargará pero las requests del ambiente de test fallarán
 
 ---
 
-## 📜 Scripts disponibles
+## Scripts disponibles
 
 Desde `apps/frontend/package.json`:
 
@@ -223,6 +234,7 @@ Desde `apps/frontend/package.json`:
 - `npm run preview`: sirve localmente el build generado en modo normal
 - `npm run preview:test`: sirve localmente el build generado con modo test
 - `npm run lint`: ejecuta ESLint sobre el frontend
+- `npm run e2e:install`: instala el navegador Chromium usado por Playwright
 - `npm run e2e`: corre toda la suite de Playwright
 - `npm run e2e:ui`: abre Playwright UI mode
 - `npm run e2e:headed`: corre Playwright con navegador visible
@@ -231,7 +243,7 @@ Desde `apps/frontend/package.json`:
 
 ---
 
-## 🧭 Convenciones útiles
+## Convenciones útiles
 
 - La navegación principal vive en `src/app/router.tsx`
 - La configuración de entorno vive en `src/shared/config/env.ts`
@@ -242,7 +254,7 @@ Desde `apps/frontend/package.json`:
 
 ---
 
-## ✅ Checklist rápido de arranque local
+## Checklist rápido de arranque local
 
 Para alguien que llega por primera vez al proyecto:
 
